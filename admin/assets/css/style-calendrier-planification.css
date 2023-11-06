@@ -1,0 +1,118 @@
+.shadow {
+    box-shadow: 0 0rem 1rem rgba(0,0,0,.15)!important;
+}
+.calendar {
+    /* height: 100vh; */
+    padding-bottom: 1rem;
+}
+.calendar .flex-1 {
+    width: 22vw;
+    border-top-left-radius:1rem;
+    border-bottom-left-radius:1rem;
+    overflow: hidden;
+}
+.calendar .flex-2 {
+    width: calc(100% - 22vw);
+    overflow: hidden;
+    border-top-left-radius:1rem;
+    border-top-right-radius:1rem;
+    border-bottom-right-radius:1rem;
+}
+.calendar .calendar--menu .c-link {
+    width: 100%;
+    padding:2rem;
+    border-bottom: 1px solid #eee;
+    font-weight: bold;
+    font-size: 17px;
+    text-decoration: none;
+    color: var(--pal);
+}
+.calendar .calendar--menu .c-link:last-child {
+    border: 0;
+}
+.calendar .calendar--menu .c-link.active {
+    background-color: var(--pal);
+    color: #fff;
+    cursor: default;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+table.table-calendar {
+    box-shadow: 0 0rem 5rem rgba(0,0,0,.15)!important;
+}
+table.table-calendar td, table.table-calendar th {
+    width: 40px;
+    max-width: 40px;
+    height: 62px;
+    padding: 1rem;
+    position: relative;
+    border: 1px solid #eee;
+    word-break: break-all;
+    text-align: center;
+}
+table.table-calendar td {
+    font-size: 13px;
+    font-weight: bold;
+}
+table.table-calendar td .__date {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+}
+table.table-calendar th {
+    border-top:0;
+}
+table.table-calendar thead th:last-child, 
+table.table-calendar tbody td:last-child {
+    border-right: 0;
+}
+table.table-calendar tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.div-recap {
+    position: absolute;
+    top: -50px;
+    left: 60px;
+    width:200px;
+}
+@media screen and (max-width: 1219px) {
+    .div-recap {
+        position: relative;
+        top: unset;
+        left: unset;
+        margin-bottom: 2rem;
+    }
+}
+table.table-recap td {
+    padding: .35rem;
+    border: 1px solid #eee;
+}
+table.table-recap thead td {
+    border-top: 0;
+}
+table.table-recap thead td:first-child, 
+table.table-recap tbody td:first-child {
+    border-left: 0;
+}
+table.table-recap thead td:last-child, 
+table.table-recap tbody td:last-child {
+    border-right: 0;
+}
+table.table-recap tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.table-details {
+    border-collapse: collapse;
+}
+.table-details th, .table-details td {
+    color: #000;
+    border: 1px solid;
+    padding: 1rem;
+}
+.btn-archive:hover {
+    color: var(--pal);
+}

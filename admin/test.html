@@ -1,0 +1,14 @@
+<label for="choix_bieres">Indiquez votre biere preferee :</label>
+<input list="bieres" type="text" id="choix_bieres">
+<datalist id="bieres">
+  <option value="Meteor">
+  <option value="Pils">
+  <option value="Kronenbourg">
+  <option value="Grimbergen">
+</datalist>
+
+<script>
+    document.querySelector('#bieres').onclick = function () {
+        console.log(this.value)
+    }
+</script>

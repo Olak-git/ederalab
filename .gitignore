@@ -1,0 +1,16 @@
+# vendor
+vendor/*
+
+assets/images/avatars/*.*
+!assets/images/avatars/empty-person.png
+
+assets/images/site/chat1.png
+assets/images/site/chat2.png
+assets/images/site/chevron-down.svg
+assets/images/site/icons8-sujet-48.png
+assets/images/site/icons8-sujet-48-1.png
+assets/images/site/icons8-sujet-96.png
+assets/images/site/icons8-sujet-96-1.png
+assets/images/site/triag-left.png
+
+text.htaccess.text
