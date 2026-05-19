@@ -1,26 +1,26 @@
 <?php
 namespace src\Vendor;
 
-use PDO;
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+use Dotenv;
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__."/../..");
+$dotenv->load();
 
 class DB
 {
-    protected const SERVERNAME = 'localhost';
-    protected const DBNAME = 'ederalab';
-    protected const USER = 'project_root';
-    protected const PASSWORD = 'default';
-
     // Objet PDO d'accès à la BD
     protected $db;
 
     public function __construct()
     {
         try {
-            $this->db = new \PDO('mysql:host=' .self::SERVERNAME. ';
-                                    dbname=' .self::DBNAME. ';
+            $this->db = new \PDO('mysql:host=' .$_ENV["DB_HOST"]. ';
+                                    dbname=' .$_ENV["DB_NAME"]. ';
                                     charset=utf8', 
-                                    self::USER, 
-                                    self::PASSWORD, 
+                                    $_ENV["DB_USER"], 
+                                    $_ENV["DB_PASSWORD"], 
                                     array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION)
                             );
         } catch(\PDOException $e) {

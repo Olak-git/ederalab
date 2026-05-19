@@ -108,7 +108,6 @@ class Commande implements Storage , EntityInterface
         $this->valide = 0;
         $this->livraison = 0;
         $this->slug = $this->createSlug();
-        $this->password = 'default';
 
         $this->hydrate($data);
     }

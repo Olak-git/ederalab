@@ -68,7 +68,7 @@ class PaginatorService
      */
     private $to;
 
-    public function __construct(array $data = [], int $offset, int $limit = 40)
+    public function __construct(array $data = [], int $offset = 0, int $limit = 40)
     {
         $this->data = $data;
         $this->limit = $limit < 1 ? 1 : $limit;

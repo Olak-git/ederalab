@@ -12,7 +12,7 @@ trait Hydrate
                 //     $this->$methode($valeur);
                 // }
                 if (is_callable(array($this, $methode))) {
-                    $valeur = trim($valeur) === '' ? null : $valeur;
+                    $valeur = !$valeur ? $valeur : (trim($valeur) === '' ? null : $valeur);
                     $valeur = $valeur;
                     $this->$methode($valeur);
                 }
@@ -24,7 +24,7 @@ trait Hydrate
                 //     $this->$methode($valeur);
                 // }
                 if (is_callable(array($this, $methode))) {
-                    $valeur = trim($valeur) === '' ? null : $valeur;
+                    $valeur = !$valeur ? $valeur : (trim($valeur) === '' ? null : $valeur);
                     $valeur = is_string($valeur) ? htmlspecialchars($valeur) : $valeur;
                     $this->$methode($valeur);
                 }
