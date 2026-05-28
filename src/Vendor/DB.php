@@ -5,8 +5,13 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Dotenv;
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__."/../..");
-$dotenv->load();
+$envPath = __DIR__ . "/../..";
+
+// On ne charge Dotenv que si le fichier .env existe physiquement (en local)
+if (file_exists($envPath . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable($envPath);
+    $dotenv->load();
+}
 
 class DB
 {
@@ -17,43 +22,45 @@ class DB
 
     public function __construct()
     {
-        $currentDir = __DIR__;
         // Construire le chemin absolu vers ca.pem
-        $caCertPath = $currentDir . DIRECTORY_SEPARATOR . 'ca.pem'; // '/etc/ssl/cert.pem';
+        $ca_cert_path = __DIR__ . DIRECTORY_SEPARATOR . 'ca.pem';
 
-        $conn = "pgsql:"; // pgsql
-        $conn .= "host={$_ENV['DB_HOST']};";
-        $conn .= "port={$_ENV['DB_PORT']};";
-        $conn .= "dbname={$_ENV['DB_NAME']};";
+        $db_host = $_ENV['DB_HOST'] ?: getenv('DB_HOST');
+        $db_port = $_ENV['DB_PORT'] ?: getenv('DB_PORT');
+        $db_name = $_ENV['DB_NAME'] ?: getenv('DB_NAME');
+        $db_user = $_ENV['DB_USER'] ?: getenv('DB_USER');
+        $db_password = $_ENV['DB_PASSWORD'] ?: getenv('DB_PASSWORD');
 
-        if(preg_match("/^(pgsql)/",$conn)) {
-            // Paramètres SSL
-            // $conn .= "sslmode=require;";
-            $conn .= "sslmode=verify-ca;sslrootcert={$caCertPath};";
+        $conn = "pgsql:";
+        $conn .= "host={$db_host};";
+        $conn .= "port={$db_port};";
+        $conn .= "dbname={$db_name};";
 
-            $conn .= "options='--client_encoding=UTF8'";
+        // Paramètres SSL
+        if (file_exists($ca_cert_path)) {
+            $conn .= "sslmode=verify-ca;sslrootcert={$ca_cert_path};";
         } else {
-            // Paramètres SSL
             $conn .= "sslmode=require;";
-            // $conn .= "sslmode=verify-ca;sslrootcert={$caCertPath};";
-
-            $conn .= "charset=utf8";
         }
+
+        $conn .= "options='--client_encoding=UTF8'";
         
         try {
             $this->db = new \PDO(
                 $conn, 
-                $_ENV["DB_USER"], 
-                $_ENV["DB_PASSWORD"], 
+                $db_user, 
+                $db_password, 
                 array(
                     \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                     \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                 )
             );
         } catch(\PDOException $e) {
-            echo "Erreur complète : " . $e->getMessage() . "<br>";
-            echo "Code d'erreur : " . $e->getCode() . "<br>";
-            die("Trace : " . $e->getTraceAsString());
+            error_log("Échec de la connexion BDD : " . $e->getMessage());
+            die("Une erreur est survenue lors de la connexion au serveur. Veuillez réessayer plus tard.");
+            // echo "Erreur complète : " . $e->getMessage() . "<br>";
+            // echo "Code d'erreur : " . $e->getCode() . "<br>";
+            // die("Trace : " . $e->getTraceAsString());
         }
     }
 
