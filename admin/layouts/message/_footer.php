@@ -29,7 +29,7 @@
                             <input type="file" name="image" accept="image/*" class="d-none">
                             <input type="file" name="doc" accept=".doc, .docx, .pdf, .txt, .csv, .ppt, .pptx, .zip, .rar, .jpg, .gif, .png, .jpeg" class="d-none">
                             <input type="hidden" name="chat[exp]" value="<?= password_hash('admin', 1); ?>">
-                            <input type="hidden" name="chat[dest]" value="<?= isset($dest) && null !== $dest ? $dest->getSlug() : ''; ?>">
+                            <input type="hidden" name="chat[dest]" value="<?= isset($dest) && null !== $dest ? $dest["slug"] : ''; ?>">
                             <input type="hidden" name="chat[compte_dest]" value="<?= isset($user) && (strtolower($user) == 'dentiste' || strtolower($user) == 'transporteur') ? strtolower($user) : '' ?>">
                             <input type="hidden" name="csrf" value="<?= password_hash('chat', 1); ?>">
                             

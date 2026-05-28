@@ -1,11 +1,12 @@
 <?php
 use src\Router\Router;
 
-    include '../autoload.php';
+include '../autoload.php';
 
-    $router = new Router;
+$router = new Router;
 
-    $router->request();
+$router->dentisteBack();
+$router->request();
 ?>
 
 <!DOCTYPE html>

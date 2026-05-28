@@ -1,22 +1,18 @@
 <?php
 namespace src\Controller;
 
-use src\Entity\Commande;
+use src\Vendor\DB;
 use src\Vendor\Security;
-use src\Entity\ChoixProthese;
-use src\Services\FileService;
 use src\Vendor\EntityManager;
-use src\Entity\ChoixTransporteur;
-use src\Repository\CommandeRepository;
-use src\Repository\ProtheseRepository;
-use src\Repository\TransporteurRepository;
-use src\Repository\ChoixTransporteurRepository;
 
 class AdminController extends Security
 {
+    private $db;
+
     public function __construct()
     {
         parent::__construct();
+        $this->db = new DB;
     }
 
     public function isCsrfValidate($value, $csrf)
@@ -62,9 +58,8 @@ class AdminController extends Security
                 }
 
                 if(!$this->hasError()) {
-                    $em = new EntityManager;
-                    $admin->hydrate($data);
-                    $em->update($admin);
+                    $admin = array_merge($admin, $data);
+                    (new EntityManager)->update("admin", $data, $admin["id"]);
 
                     $_SESSION['admin'] = serialize($admin);
 

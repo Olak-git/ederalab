@@ -1,43 +1,36 @@
 <?php
 namespace src\Router;
 
-use src\Vendor\Routes;
+use src\Vendor\DB;
 use src\Vendor\Security;
-use src\Vendor\GenerateRoutes;
-use src\Entity\ChoixTransporteur;
 use src\Controller\AdminController;
-use src\Repository\AdminRepository;
 use src\Controller\FactureController;
 use src\Controller\MessageController;
 use src\Controller\CommandeController;
 use src\Controller\DentisteController;
 use src\Controller\ProtheseController;
 use src\Controller\SecurityController;
-use src\Repository\CommandeRepository;
-use src\Repository\DiscussionRepository;
 use src\Controller\TransporteurController;
-use src\Repository\ChoixTransporteurRepository;
 
 clearstatcache();
 
 class Router extends Security
 {
     /**
-     * @var Routes
+     * @var \src\Vendor\DB
      */
-    private $routes;
+    private $db;
 
     public function __construct()
     {
         parent::__construct();
-        
-        (new GenerateRoutes)->routes();
-        $this->routes = new Routes;
+
+        $this->db = new DB;
     }
 
-    public function getRoutes(): Routes
+    public function getDb(): DB
     {
-        return $this->routes;
+        return $this->db;
     }
 
     public function errorHTML2($name)
@@ -71,7 +64,7 @@ class Router extends Security
 
     public function setLastPath(string $path, array $param = null): self
     {
-        $_SESSION['last_path'] = $this->routes->path($path);
+        $_SESSION['last_path'] = $path;
 
         if(null !== $param && !empty($param)) {
             $count = count($param) - 1;
@@ -111,74 +104,6 @@ class Router extends Security
         return password_verify($value, $csrf);
     }
 
-    // private function isValidateEmail(string $email)
-    // {
-    //     $email = htmlspecialchars($email);
-    //     if(!empty($email)) 
-    //     {
-    //         if(!preg_match('/^[A-Z0-9._%+-]+@([A-Z0-9-]+\.)+[A-Z]{2,4}$/i', $email)) 
-    //         {
-    //             $this->addError('email', 'Adresse email non valide.');
-    //         } else {
-    //             if(isset($_POST['edit_profil'])) {
-    //                 $admin = (new AdminRepository)->findOneBy(['email' => $email]);
-    //                 if($admin && strtolower($admin->getEmail()) !== strtolower($email)) {
-    //                     $this->addError('email', 'Un compte existe déjà avec cette adresse email. Veuillez en utiliser une autre.');
-    //                 }
-    //             } else {
-    //                 if((new AdminRepository)->findOneBy(['email' => $email])) {
-    //                     $this->addError('email', 'Un compte existe déjà avec cette adresse email. Veuillez en utiliser une autre.');
-    //                 } else {
-    //                     // $_SESSION['registration']['email'] = $email;
-    //                 }                    
-    //             }
-    //         }
-    //     } else {
-    //         $this->addError('email', 'Email requis.');
-    //     }
-    // }
-
-    // private function isValidatePassword($password, $confirmation_password)
-    // {
-    //     if(!empty($password)) {
-    //         // $password = htmlspecialchars($password);
-    //         if(!preg_match('/(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[0-9])(?=\S*[\W])/', $password) || strlen($password) < 8) {
-    //             $this->addError('password', 'Doit contenir les carctères a-z, A-Z, 0-9 et caractères spéciaux(+,=,@,...)');
-    //         } else {
-    //             if(!empty($confirmation_password)) {
-    //                 if($password !== $confirmation_password) {
-    //                     $this->addError('confirmation_password', 'Confirmation Mot de passe incorrect.');   
-    //                 } else {
-    //                     $_SESSION['registration']['password'] = $password;
-    //                 }
-    //             } else {
-    //                 $this->addError('confirmation_password', 'Confirmation Mot de passe requise.');  
-    //             }
-    //         }
-    //     } else {
-    //         $this->addError('password', 'Mot de passe requis');
-    //     }
-    // }
-
-    // private function isValidateTexte($texte, $str)
-    // {
-    //     if(empty(trim($texte))) {
-    //         $this->addError($str, 'Please enter your ' . $str . '.');
-    //     }
-    // }
-
-    // private function isValidatePhone($ph)
-    // {
-    //     if(empty($ph)) {
-    //         $this->addError('phone', 'Est requis.');
-    //     } else {
-    //         // if(!preg_match('#^(\+|00){1}[0-9]+#i', $ph))
-    //         if(!preg_match('#[a-z]*#i', $ph)) {
-    //             $this->addError('phone', 'Format invalide (Ex: +14151234567)');
-    //         }
-    //     }
-    // }
-
     public function signout(string $user)
     {
         if($user == 'admin') {
@@ -201,6 +126,27 @@ class Router extends Security
     {
         if($this->getAdmin()) {
             header('Location: ' . $this->getLastPath());
+        }
+    }
+
+    public function adminBack()
+    {
+        if($this->getAdmin()) {
+            header('Location:calendrier-de-planification-commande-recue.php');
+        }
+    }
+
+    public function dentisteBack()
+    {
+        if($this->getDentiste()) {
+            header('Location: accueil.php');
+        }
+    }
+
+    public function transporteurBack()
+    {
+        if($this->getTransporteur()) {
+            header('Location: accueil.php');
         }
     }
 
@@ -228,14 +174,7 @@ class Router extends Security
     public function isConnected()
     {
         if(!$this->getAdmin()) {
-            header('Location: ' . $this->routes->path('admin_login'));
-        }
-    }
-
-    public function isLogin()
-    {
-        if($this->getAdmin()) {
-            header('Location:' . $this->routes->path('home'));
+            header('Location: connexion.php');
         }
     }
 
@@ -253,12 +192,12 @@ class Router extends Security
     {
         $path = '';
         if(method_exists($object, 'getImage')) {
-            if(is_null($object->getImage()) || '' === $object->getImage()) {
+            if(empty($object["image"]) || '' === $object["image"]) {
                 return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person w-100 h-100" viewBox="0 0 16 16">
                             <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
                         </svg>';
             } else {
-                return '<img src="./assets/images/faces/' . $object->getImage() . '" alt="" class="w-100 h-100" />';
+                return '<img src="./assets/images/faces/' . $object["image"] . '" alt="" class="w-100 h-100" />';
             }
         }
     }
@@ -408,22 +347,36 @@ class Router extends Security
 
     public function getCommandesTransporteur($date): array
     {
-        return (new ChoixTransporteurRepository)->getChoixForCommande($this->getTransporteur()->getId(), $date);
+        return $this->db->query(
+            "SELECT c.* 
+            FROM choix_transporteur c 
+            INNER JOIN transporteur t 
+                ON c.transporteur = t.id 
+            WHERE t.id = :tid 
+            AND EXTRACT(DATE FROM date_reception) = :cdate", ['tid' => $this->getTransporteur()["id"], 'cdate' => $date]
+        )->fetchAll();
     }
 
     public function getCommandesDentiste($date): array
     {
-        return (new CommandeRepository)->findBy(['dentiste' => $this->getDentiste()->getId(), 'date_envoie' => $date]);
+        return $this->db->findBy("commande", ['dentiste' => $this->getDentiste()["id"], 'date_envoie' => $date]);
     }
 
     public function getCommandes($date): array
     {
-        return (new CommandeRepository)->findCalendarCommandReceive($date);
+        return $this->db->query(
+            "SELECT * 
+            FROM commande 
+            WHERE date_envoie = :dat 
+            AND archive = 0 
+            AND valide != -1 
+            AND livraison != 2", ['dat' => $date]
+        )->fetchAll();
     }
 
     public function getCommandesLivrees($date): array
     {
-        return (new CommandeRepository)->findBy(['date_envoie' => $date, 'livraison' => 2]);
+        return $this->db->findBy("commande", ['date_envoie' => $date, 'livraison' => 2]);
     }
 
     public function getMonth(int $m)
@@ -440,25 +393,28 @@ class Router extends Security
     public function getLastMessage($id, string $user)
     {
         $text = '';
-        $discussion = (new DiscussionRepository)->findOneBy(['admin' => 1, 'receveur' => $id, 'compte_receveur' => $user]);
+        $discussion = $this->db->findOneBy("discussion", ['admin' => 1, 'receveur' => $id, 'compte_receveur' => $user]);
         if($discussion) {
-            if($discussion->getLastMessage() && $discussion->getLastMessage()->getMessage()) {
-                $expediteur = '';
-                if($this->getAdmin()) {
-                    $expediteur = 'admin';
-                } elseif($this->getDentiste()) {
-                    $expediteur = 'dentiste';
-                } elseif($this->getTransporteur()) {
-                    $expediteur = 'transporteur';
-                }
-                if($discussion->getLastMessage()->getMessage()->getExpediteur() == $expediteur) {
-                    $text = '<span class="font-weight-bold">(moi) </span>';
-                }
-                $message = $discussion->getLastMessage()->getMessage();
-                if(null !== $message->getMessage()) {
-                    $text .= $this->formatText($message->getMessage(), 50);    
-                } elseif(null !== $discussion->getLastMessage()->getMessage()->getFichier()) {
-                    $text .= '<i>file</i>';
+            $lastMessage = $this->db->findOneBy("last_message", ['discussion' => $discussion["id"]]);
+            if($lastMessage) {
+                $message = $this->db->findOneBy("message", ['id' => $lastMessage["message"]]);
+                if($message) {
+                    $expediteur = '';
+                    if($this->getAdmin()) {
+                        $expediteur = 'admin';
+                    } elseif($this->getDentiste()) {
+                        $expediteur = 'dentiste';
+                    } elseif($this->getTransporteur()) {
+                        $expediteur = 'transporteur';
+                    }
+                    if($message["expediteur"] == $expediteur) {
+                        $text = '<span class="font-weight-bold">(moi) </span>';
+                    }
+                    if(null !== $message["message"]) {
+                        $text .= $this->formatText($message["message"], 50);    
+                    } elseif(null !== $message["fichier"]) {
+                        $text .= '<i>file</i>';
+                    }
                 }
             }
         }
@@ -573,5 +529,125 @@ class Router extends Security
         if(isset($_POST['new_facture'])) {
             (new FactureController)->createFacture($_POST);
         }
+    }
+
+    public function getUsername($nom, $prenom="") : string {
+        return ucwords($nom . ' ' . $prenom);
+    }
+
+    public function totalCommandesRecuesPlanification($year = null, $month = null)
+    {
+        $params = [];
+        $sql = 'SELECT COUNT(id) n  
+                FROM commande 
+                WHERE archive = 0 
+                AND valide != -1 
+                AND livraison != 2';
+        if($year !== null) {
+            $sql .= ' AND EXTRACT(YEAR FROM date_envoie) = :year';
+            $params['year'] = $year;
+        }
+        if($month !== null) {
+            $sql .= ' AND EXTRACT(MONTH FROM date_envoie) = :month';
+            $params['month'] = $month;
+        }
+        return [$sql, $params];
+    }
+
+    public function totalCommandesLivrees($year = null, $month = null)
+    {
+        $params = [];
+        $sql = 'SELECT COUNT(id) n 
+                FROM commande 
+                WHERE archive = 0 
+                AND valide = 1 
+                AND livraison = 2';
+        if($year !== null) {
+            $sql .= ' AND EXTRACT(YEAR FROM date_envoie) = :year';
+            $params['year'] = $year;
+        }
+        if($month !== null) {
+            $sql .= ' AND EXTRACT(MONTH FROM date_envoie) = :month';
+            $params['month'] = $month;
+        }
+        return [$sql, $params];
+    }
+
+    public function chartCommandeRecue(?int $dentiste_id = null)
+    {
+        $params = ['year' => date('Y')];
+        $sql = 'SELECT COUNT(c.id) n, EXTRACT(MONTH FROM date_envoie) m 
+                FROM commande c 
+                INNER JOIN dentiste d 
+                    ON c.dentiste = d.id 
+                WHERE EXTRACT(YEAR FROM date_envoie) = :year ';
+        if(null !== $dentiste_id) {
+            $sql .= 'AND d.id = :did ';
+            $params['did'] = $dentiste_id;
+        }
+        $sql .= 'GROUP BY EXTRACT(MONTH FROM date_envoie) 
+                ORDER BY m ASC';
+
+        return [$sql, $params];
+    }
+
+    public function chartCommandeLivree(?int $dentiste_id = null)
+    {
+        $params = ['year' => date('Y')];
+        $sql = 'SELECT COUNT(c.id) n, EXTRACT(MONTH FROM date_envoie) m 
+                FROM commande c 
+                INNER JOIN dentiste d 
+                    ON c.dentiste = d.id 
+                WHERE c.valide = 1 
+                AND c.livraison = 2 
+                AND EXTRACT(YEAR FROM date_envoie) = :year ';
+        if(null !== $dentiste_id) {
+            $sql .= 'AND d.id = :did ';
+            $params['did'] = $dentiste_id;
+        }
+        $sql .= 'GROUP BY EXTRACT(MONTH FROM date_envoie) 
+                ORDER BY m ASC';
+
+        return [$sql, $params];
+    }
+
+    public function chartCommandeEnAttente(?int $dentiste_id = null)
+    {
+        $params = ['year' => date('Y')];
+        $sql = 'SELECT COUNT(c.id) n, EXTRACT(MONTH FROM date_envoie) m 
+                FROM commande c 
+                INNER JOIN dentiste d 
+                    ON c.dentiste = d.id 
+                WHERE c.valide = 1 
+                AND c.livraison = 0 
+                AND EXTRACT(YEAR FROM date_envoie) = :year ';
+        if(null !== $dentiste_id) {
+            $sql .= 'AND d.id = :did ';
+            $params['did'] = $dentiste_id;
+        }
+        $sql .= 'GROUP BY EXTRACT(MONTH FROM date_envoie) 
+                ORDER BY m ASC';
+
+        return [$sql, $params];
+    }
+
+    public function chartCommandeNonLivree(?int $dentiste_id = null)
+    {
+        $params = ['year' => date('Y')];
+        $sql = 'SELECT COUNT(c.id) n, EXTRACT(MONTH FROM date_envoie) m 
+                FROM commande c 
+                INNER JOIN dentiste d 
+                    ON c.dentiste = d.id 
+                WHERE c.valide = 1 
+                AND c.livraison = -1 
+                AND EXTRACT(YEAR FROM date_envoie) = :year ';
+        if(null !== $dentiste_id) {
+            $sql .= 'AND d.id = :did ';
+            $params['did'] = $dentiste_id;
+        } 
+        $sql .= 'GROUP BY EXTRACT(MONTH FROM date_envoie) 
+                ORDER BY m ASC';
+
+        return [$sql, $params];
     }
 }

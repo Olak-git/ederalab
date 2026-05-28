@@ -1,13 +1,11 @@
 <?php
 use src\Router\Router;
 
-    include '../autoload.php';
+include '../autoload.php';
 
-    $router = new Router;
-    // var_dump($router->getTransporteur());
-    // die();
-
-    $router->request();
+$router = new Router;
+$router->transporteurBack();
+$router->request();
 ?>
 
 <!DOCTYPE html>
@@ -71,9 +69,8 @@ use src\Router\Router;
         <div class="d-flex justify-content-center w-100">
             <div class="col-12 col-sm-8 col-md-6">
                 <?= ''//'<p>Slug: ' . md5(password_hash(time(), 1)) . ', pass: ' . password_hash('default', 1) . '</p>'; ?>
-                <!-- Lorem, ipsum dolor sit amet consectetur adipisicing elit. Aspernatur rem deserunt culpa ipsam iste dolorum, corporis amet reiciendis, quia nostrum laboriosam consectetur quos perferendis architecto, quasi tempore nulla tenetur! Porro. -->
                 <form method="post" class="w-100">
-                    <p class="text-right pr-2"><a href="creer-compte.php" class="text-ederalab">Créer un compte Fournisseur</a></p>
+                    <!-- <p class="text-right pr-2"><a href="creer-compte.php" class="text-ederalab">Créer un compte Fournisseur</a></p> -->
                     <div class="py-3 px-5 shadow" style="border-radius:1rem;">
                         <img src="<?= $router->getLogo(); ?>" alt="" style="width:80px;">
 

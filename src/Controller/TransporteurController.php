@@ -1,19 +1,22 @@
 <?php
 namespace src\Controller;
 
+use src\Vendor\DB;
 use src\Vendor\Security;
-use src\Entity\Identifiant;
-use src\Entity\Transporteur;
 use src\Services\FileService;
 use src\Vendor\EntityManager;
-use src\Repository\IdentifiantRepository;
-use src\Repository\TransporteurRepository;
+use src\traits\Properties;
 
 class TransporteurController extends Security
 {
+    use Properties;
+
+    private $db;
+
     public function __construct()
     {
         parent::__construct();
+        $this->db = new DB;
     }
 
     public function isBlank($form, $key, $index)
@@ -58,10 +61,10 @@ class TransporteurController extends Security
                 $this->addError('email', 'Adresse email non valide.');
                 return false;
             } else {
-                $user = (new TransporteurRepository)->findOneBy(['email' => $email]);
+                $user = $this->db->findOneBy("transporteur", ['email' => $email]);
                 if(isset($_POST['upd_compte_transporteur'])) {
                     $user_connected = $this->getTransporteur();
-                    if($user && $user_connected && strtolower($user->getEmail()) !== strtolower($user_connected->getEmail())) {
+                    if($user && $user_connected && strtolower($user["email"]) !== strtolower($user_connected["email"])) {
                         $this->addError('email', 'Un compte existe déjà avec cette adresse email. Veuillez en utiliser une autre.');
                     }
                 } else {
@@ -94,8 +97,8 @@ class TransporteurController extends Security
                         if(preg_match('#[ ]+#i', $form['identifiant'])) {
                             $this->addError('identifiant', 'L\'identifiant ne doit contenir aucun espace.');
                         } else {
-                            $_transporteur = (new IdentifiantRepository)->findOneBy(['code' => $form['identifiant']]);
-                            if($_transporteur) {
+                            $_identifiant = $this->db->findOneBy("identifiant", ['code' => $form['identifiant']]);
+                            if($_identifiant) {
                                 $this->addError('identifiant', 'Le compte <em>' . $form['identifiant'] . '</em> existe déjà pour un utilisateur. Veuillez le changer.');
                             }
                         }
@@ -122,20 +125,20 @@ class TransporteurController extends Security
                 $nom = $nom_pre['0'];
                 $prenom = trim(substr($form['nom'], strlen($nom), strlen($form['nom'])));
 
-                $transporteur = new Transporteur([
+                $transporteurId = $em->add("transporteur", [
                     'identifiant' => $form['identifiant'],
                     'nom' => $nom,
                     'prenom' => $prenom,
                     'adresse' => $form['adresse'],
-                    'phone' => $form['phone'],
+                    'phone' => $form['phone'], 
+                    "del" => 0,
+                    "slug" => $this->createSlug(),
+                    // "password" => password_hash("default", 1)
                 ]);
-                $em->add($transporteur);
-
-                $identifiant = new Identifiant([
+                $em->add("identifiant", [
                     'code' => $form['identifiant'],
-                    'transporteur' => $transporteur->getId()
+                    'transporteur' => $transporteurId                    
                 ]);
-                $em->add($identifiant);
             }
         } else {
             
@@ -152,7 +155,7 @@ class TransporteurController extends Security
                 if(empty($form['id'])) {
                     $this->addError('error', 'Une erreur non identifiée est survenue. Veuillez reprendre.');
                 } else {
-                    $transporteur = (new TransporteurRepository)->findOneBy(['id' => $form['id']]);
+                    $transporteur = $this->db->findOneBy("transporteur", ['id' => $form['id']]);
                     if($transporteur) {
                         if(empty($form['identifiant'])) {
                             $this->addError('identifiant', 'Est requis');
@@ -163,8 +166,8 @@ class TransporteurController extends Security
                                 if(preg_match('#[ ]+#i', $form['identifiant'])) {
                                     $this->addError('identifiant', 'L\'identifiant ne doit contenir aucun espace.');
                                 } else {
-                                    $identifiant = (new IdentifiantRepository)->findOneBy(['code' => $form['identifiant']]);
-                                    if($identifiant && !$this->isCsrfValidate($identifiant->getCode(), $transporteur->getIdentifiant())) {
+                                    $identifiant = $this->db->findOneBy("identifiant", ['code' => $form['identifiant']]);
+                                    if($identifiant && !$this->isCsrfValidate($identifiant["code"], $transporteur["identifiant"])) {
                                         $this->addError('identifiant', 'Le compte <em>' . $form['identifiant'] . '</em> existe déjà pour un utilisateur. Veuillez le changer.');
                                     }
                                 }
@@ -196,17 +199,17 @@ class TransporteurController extends Security
                 $nom = $nom_pre['0'];
                 $prenom = trim(substr($form['nom'], strlen($nom), strlen($form['nom'])));
 
-                $transporteur->setIdentifiant(password_hash(trim($form['identifiant']), 1));
-                $transporteur->setNom($nom);
-                $transporteur->setPrenom($prenom);
-                $transporteur->setAdresse($form['adresse']);
-                $transporteur->setPhone($form['phone']);
+                $em->update("transporteur", [
+                    "identifiant" => password_hash(trim($form['identifiant']), 1),
+                    "nom" => $nom,
+                    "prenom" => $prenom,
+                    "adresse" => $form['adresse'],
+                    "phone" => $form['phone']
+                ], $transporteur["id"]);
 
-                $identifiant = $transporteur->getEntityCode();
-                $identifiant->setCode($form['identifiant']);
-
-                $em->update($transporteur);
-                $em->update($identifiant);
+                $em->update("identifiant", ["code" => $form['identifiant']], [
+                    ["transporteur", "=", $transporteur["id"]]
+                ]);
             }
         } else {
             $this->addError('error', 'Une erreur non identifiée est survenue. Veuillez reprendre.');
@@ -228,8 +231,8 @@ class TransporteurController extends Security
                     if(preg_match('#[ ]+#i', $form['identifiant'])) {
                         $this->addError('identifiant', 'L\'identifiant ne doit contenir aucun espace.');
                     } else {
-                        $_transporteur = (new IdentifiantRepository)->findOneBy(['code' => $form['identifiant']]);
-                        if($_transporteur) {
+                        $_identifiant = $this->db->findOneBy("identifiant", ['code' => $form['identifiant']]);
+                        if($_identifiant) {
                             $this->addError('identifiant', 'Le compte <em>' . $form['identifiant'] . '</em> existe déjà pour un utilisateur. Veuillez le changer.');
                         } else {
                             $data['identifiant'] = $form['identifiant'];
@@ -260,16 +263,17 @@ class TransporteurController extends Security
             if(!$this->hasError()) {
                 $em = new EntityManager;
     
-                $transporteur = new Transporteur($data);
-                $em->add($transporteur);
-    
-                $identifiant = new Identifiant([
-                    'code' => $form['identifiant'],
-                    'transporteur' => $transporteur->getId(),
-                ]);
-                $em->add($identifiant);
+                $data['del'] = 0;
+                $data['slug'] = $this->createSlug();
+                $transporteurId = $em->add("transporteur", $data);
+                $data['id'] = $transporteurId;
 
-                $_SESSION['transporteur'] = serialize($transporteur);
+                $identifiantId = $em->add("identifiant", [
+                    'code' => $form['identifiant'],
+                    'transporteur' => $transporteurId,                    
+                ]);
+
+                $_SESSION['transporteur'] = serialize($data);
                 header('Location: accueil.php');
             }
         } else {
@@ -287,8 +291,8 @@ class TransporteurController extends Security
                     if(preg_match('#[ ]+#i', $form['identifiant'])) {
                         $this->addError('identifiant', 'L\'identifiant ne doit contenir aucun espace.');
                     } else {
-                        $identifiant = (new IdentifiantRepository)->findOneBy(['code' => $form['identifiant']]);
-                        if($identifiant && !$this->isCsrfValidate($identifiant->getCode(), $transporteur->getIdentifiant())) {
+                        $identifiant = $this->db->findOneBy("identifiant", ['code' => $form['identifiant']]);
+                        if($identifiant && !$this->isCsrfValidate($identifiant["code"], $transporteur["identifiant"])) {
                             $this->addError('identifiant', 'Le compte <em>' . $form['identifiant'] . '</em> existe déjà pour un utilisateur. Veuillez le changer.');
                         } else {
                             $data['identifiant'] = password_hash(trim($form['identifiant']), 1);
@@ -326,14 +330,13 @@ class TransporteurController extends Security
                 }
 
                 if(!$this->hasError()) {
+                    $transporteur = array_merge($transporteur, $data);
                     $em = new EntityManager;
-                    $transporteur->hydrate($data);
-
-                    $identifiant = $transporteur->getEntityCode();
-                    $identifiant->setCode($form['identifiant']);
-    
-                    $em->update($transporteur);
-                    $em->update($identifiant);
+                    
+                    $em->update("transporteur", $data, $transporteur["id"]);
+                    $em->update("identifiant", ["code" => $form['identifiant']], [
+                        ["transporteur", "=", $transporteur["id"]]
+                    ]);
 
                     $_SESSION['transporteur'] = serialize($transporteur);
     
@@ -356,11 +359,9 @@ class TransporteurController extends Security
                 if(empty($form['id'])) {
                     $this->addError('error', 'Une erreur non identifiée est survenue. Veuillez reprendre.');
                 } else {
-                    $transporteur = (new TransporteurRepository)->findOneBy(['id' => $form['id']]);
+                    $transporteur = $this->db->findOneBy("transporteur", ['id' => $form['id']]);
                     if($transporteur) {
-                        $em = new EntityManager;
-                        $transporteur->setDel(1);
-                        $em->update($transporteur);
+                        (new EntityManager)->update("transporteur", ["del" => 1], $transporteur["id"]);
                     }
                 }
             }

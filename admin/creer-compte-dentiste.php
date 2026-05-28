@@ -2,8 +2,6 @@
 // name: creer_compte_dentiste
 // route: creer-compte-dentiste
 
-use src\Repository\DentisteRepository;
-use src\Repository\TransporteurRepository;
 use src\Router\Router;
 
 require '../autoload.php';
@@ -13,9 +11,6 @@ $router = new Router;
 $router->adminIsConnected();
 
 $router->request();
-
-$transporteurs = (new TransporteurRepository)->findBy(['del' => 0]);
-$dentistes = (new DentisteRepository)->findAll();
 
 $alink = 7;
 
@@ -29,7 +24,7 @@ $alink = 7;
 
     <div class="d-flex justify-content-center my-4">
         <div class="col-12 col-sm-11 text-right">
-            <a href="<?= $router->getRoutes()->path('dentistes'); ?>" class="back-button btn-lin d-inline-block text-center p-2 font-weight-bold text-dark border" style="width:80px;border-radius:.5rem;text-decoration:none;">Retour</a>
+            <a href="dentistes.php" class="back-button btn-lin d-inline-block text-center p-2 font-weight-bold text-dark border" style="width:80px;border-radius:.5rem;text-decoration:none;">Retour</a>
         </div>
     </div>
 

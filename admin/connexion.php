@@ -4,13 +4,14 @@
 
 use src\Router\Router;
 
-    include '../autoload.php';
+include '../autoload.php';
 
-    $router = new Router;
-    // var_dump($router->getAdmin());
-    // die();
+$router = new Router;
 
-    $router->request();
+$router->adminBack();
+
+$router->request();
+
 ?>
 
 <!DOCTYPE html>

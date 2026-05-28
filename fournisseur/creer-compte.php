@@ -5,7 +5,7 @@ use src\Router\Router;
 
     $router = new Router;
 
-    $router->request();
+    // $router->request();
 ?>
 
 <!DOCTYPE html>

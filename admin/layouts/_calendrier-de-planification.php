@@ -1,7 +1,7 @@
 
     <div class="row mb-5">
         <div class="col-12 text-right">
-            <a href="<?= $router->getRoutes()->path('archives'); ?>" class="btn btn-archive border-ederalab bg-white text-ederalab font-weight-bold shadow-none" style="padding:.6rem 1.25rem;font-size:13px;border-radius: .75rem;">Archive</a>
+            <a href="archives.php" class="btn btn-archive border-ederalab bg-white text-ederalab font-weight-bold shadow-none" style="padding:.6rem 1.25rem;font-size:13px;border-radius: .75rem;">Archive</a>
         </div>
     </div>
 
@@ -31,9 +31,9 @@
 
             <div class="flex-1 shadow-sm">
                 <div class="calendar--menu d-flex flex-column w-100 bg-white">
-                    <a href="<?= $router->getRoutes()->path('planification_commande_recue'); ?>" class="c-link <?= isset($clink) ? ($clink == 1 ? 'active' : '') : 'active' ?>">Date de commande reçue</a>
-                    <a href="<?= $router->getRoutes()->path('planification_commande_livree'); ?>" class="c-link <?= isset($clink) && $clink == 2 ? 'active' : ''; ?>">Date de commande livrée</a>
-                    <a href="<?= $router->getRoutes()->path('planification_commande_transporteur'); ?>" class="c-link <?= isset($clink) && $clink == 3 ? 'active' : ''; ?>">Date de réception du fournisseur d'une commande</a>
+                    <a href="calendrier-de-planification-commande-recue.php" class="c-link <?= isset($clink) ? ($clink == 1 ? 'active' : '') : 'active' ?>">Date de commande reçue</a>
+                    <a href="calendrier-de-planification-commande-livree.php" class="c-link <?= isset($clink) && $clink == 2 ? 'active' : ''; ?>">Date de commande livrée</a>
+                    <a href="calendrier-de-planification-transporteur-commande.php" class="c-link <?= isset($clink) && $clink == 3 ? 'active' : ''; ?>">Date de réception du fournisseur d'une commande</a>
                 </div>
             </div>
             <div class="flex-2 bg-white position-relative shadow-sm">
@@ -119,7 +119,17 @@
 
                                 <?php elseif($clink === 3): ?>
                                     <?php foreach($week as $ki => $day): ?>
-                                        <?php $cmd = $day !== null ? $commandeRepository->getCommandeByTransReceptionDate($calendar->getDate($day)) : []; ?>
+                                        <?php 
+                                            $cmd = $day ? $db->query(
+                                                "SELECT DISTINCT(c.id), c.* 
+                                                FROM commande c 
+                                                INNER JOIN choix_transporteur ct 
+                                                    ON ct.commande = c.id 
+                                                INNER JOIN transporteur t 
+                                                    ON ct.transporteur = t.id 
+                                                WHERE Date(ct.date_reception)=:dat", ["dat" => $calendar->getDate($day)]
+                                            )->fetchAll() : []
+                                        ?>
                                         <td class="<?= !empty($cmd) ? 'bg-ederalab text-white' : '' ?>">
                                             <?php if(!empty($cmd)): ?>
                                                 <a href="#" 

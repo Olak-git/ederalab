@@ -3,8 +3,6 @@
 // route: gestion-commande-choix-fournisseur
 
 use src\Router\Router;
-use src\Repository\CommandeRepository;
-use src\Repository\TransporteurRepository;
 
 include '../autoload.php';
 
@@ -14,11 +12,26 @@ $router->request();
 
 $router->adminIsConnected();
 
+$db = $router->getDb();
+
+$ctransporteur = null;
 if(!empty($_GET['commande'])) {
-    $commande = (new CommandeRepository)->findOneBy(['archive' => 0, 'slug' => $_GET['commande']]);
+    $commande = $db->findOneBy("commande", ['archive' => 0, 'slug' => $_GET['commande']]);
+    if($commande) {
+        $ctransporteur = $db->query(
+            "SELECT cT.*, t.nom nom_transporteur, t.prenom prenom_transporteur
+            FROM choix_transporteur cT
+            INNER JOIN commande c
+            ON cT.commande = c.id
+            INNER JOIN transporteur t
+            ON cT.transporteur = t.id
+            WHERE c.id=:cid
+            ORDER BY cT.id DESC", ["cid" => $commande["id"]]
+        )->fetch();
+    }
 }
 
-$transporteurs = (new TransporteurRepository)->findBy(['del' => 0]);
+$transporteurs = $db->findBy("transporteur", ['del' => 0]);
 
 $alink = 2;
 $code = 3;
@@ -67,10 +80,10 @@ $code = 3;
         </div>
     </div>
 
-    <?php if(!empty($commande) && $commande->getChoixTransporteur()): ?>
+    <?php if(!empty($commande) && $ctransporteur): ?>
         <div class="w-100 d-flex justify-content-center align-items-center mt-4">
             <div class="px-2" style="width:95%;">
-                <p>Commande envoyée à <span class="text-success font-weight-bold"><?= $commande->getTransporteur()->getUsername(); ?></span> le <?= (new \DateTime($commande->getChoixTransporteur()->getDateReception()))->format('d/m/Y'); ?></p>
+                <p>Commande envoyée à <span class="text-success font-weight-bold"><?= $router->getUsername($ctransporteur["nom_transporteur"], $ctransporteur["prenom_transporteur"]); ?></span> le <?= (new \DateTime($ctransporteur["date_reception"]))->format('d/m/Y'); ?></p>
             </div>
         </div>
     <?php endif; ?>
@@ -85,19 +98,19 @@ $code = 3;
                             type="button" 
                             data-toggle="modal" 
                             data-target="#profilTranspModal" 
-                            data-username="<?= $transp->getUsername(); ?>" 
-                            data-address="<?= $transp->getAdresse(); ?>" 
-                            data-phone="<?= $transp->getPhone(); ?>" 
+                            data-username="<?= $router->getUsername($transp["nom"], $transp["prenom"]); ?>" 
+                            data-address="<?= $transp["adresse"]; ?>" 
+                            data-phone="<?= $transp["phone"]; ?>" 
                             class="col-11 text-decoration-none text-dark">
                             <div class="d-flex flex-wrap w-100">
-                                <div class="col-12 col-sm-6 col-md-8"><?= $transp->getUsername() . ', ' . $transp->getAdresse(); ?></div>
-                                <div class="col-12 col-sm-6 col-md-4"><?= $transp->getPhone(); ?></div>
+                                <div class="col-12 col-sm-6 col-md-8"><?= $router->getUsername($transp["nom"], $transp["prenom"]) . ', ' . $transp["adresse"]; ?></div>
+                                <div class="col-12 col-sm-6 col-md-4"><?= $transp["phone"]; ?></div>
                             </div>
                         </a>
                         <div class="col text-right px-0">
                             <div class="custom-control custom-checkbox mb-2 mr-sm-2">
-                                <input type="radio" name="transp" class="custom-control-input check" id="customControlInline<?= $transp->getId(); ?>" value="<?= $transp->getId(); ?>">
-                                <label class="custom-control-label shadow-none" for="customControlInline<?= $transp->getId(); ?>"></label>
+                                <input type="radio" name="transp" class="custom-control-input check" id="customControlInline<?= $transp["id"]; ?>" value="<?= $transp["id"]; ?>">
+                                <label class="custom-control-label shadow-none" for="customControlInline<?= $transp["id"]; ?>"></label>
                             </div>
                         </div>
                     </div>
@@ -114,7 +127,7 @@ $code = 3;
             <?php if(isset($commande) && null !== $commande): ?>
                 <form method="post" class="my-0">
                     <button disable class="btn-link small d-inline-block cursor-pointer text-center p-2" style="width:80px;border-radius:.5rem;">Envoyer</button>
-                    <input type="hidden" name="ch_transp[commande]" value="<?= $commande->getId(); ?>" />
+                    <input type="hidden" name="ch_transp[commande]" value="<?= $commande["id"]; ?>" />
                     <input type="hidden" name="ch_transp[transporteur]" id="ch_transporteur" />
                     <input type="hidden" name="csrf" value="<?= password_hash('choice-transporter', 1); ?>" />
                 </form>

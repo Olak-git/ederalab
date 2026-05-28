@@ -5,7 +5,7 @@
                         <span class="rounded-xl receiver-image" style="">
                             <img src="<?= $router->getAvatar('') ?>" alt="" class="mw-100 mh-100">
                         </span>
-                        <a href="#" class="text-light text-decoration-none"><?= ''//$conversation->getLocataire()->getFullname(); ?></a>
+                        <a href="#" class="text-light text-decoration-none"><?= '';//; ?></a>
                     </div>
                 </div>
 

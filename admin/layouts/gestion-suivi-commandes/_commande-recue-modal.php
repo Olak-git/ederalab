@@ -51,17 +51,17 @@
                                 <!-- <div class="date mb-3 font-weight-bold">Date de réception de la commande : <span id="date-reception">02/01/2022</span></div> -->
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <a href="tel:+22546544" class="mb-3 small btn-link rounded-fit d-inline-block text-center p-2" style="width:150px;">Contacter le dentiste</a>
-                                    <a href="<?= $router->getRoutes()->path('gestion_commande_choix_fournisseur'); ?>" class="mb-3 small btn-link rounded-fit d-inline-block text-center p-2" style="width:150px;">Choix du fournisseur</a>
+                                    <a href="gestion-suivi-commande-fournisseur.php" class="mb-3 small btn-link rounded-fit d-inline-block text-center p-2" style="width:150px;">Choix du fournisseur</a>
                                 </div>
                             <?php elseif($code == 2): ?>
                                 <div class="date mb-5 mt-4 font-weight-bold">Date de livraison de la commande : <span id="date-livraison">02/01/2022</span></div>
                                 <div class="text-center mb-3">
-                                    <a href="<?= $router->getRoutes()->path('factures'); ?>" class="mb-3 small btn-link rounded-fit d-inline-block text-center p-2" style="width:150px;">Faire la facture</a>
+                                    <a href="factures.php" class="mb-3 small btn-link rounded-fit d-inline-block text-center p-2" style="width:150px;">Faire la facture</a>
                                 </div>
                             <?php elseif($code == 3): ?>
                                 <!-- <div class="date mb-5 mt-4 font-weight-bold">Date de réception de la commande : <span id="date-reception">02/01/2022</span></div> -->
                                 <div class="text-center mb-3">
-                                    <a href="<?= $router->getRoutes()->path('gestion_commande_choix_fournisseur'); ?>" class="mb-3 small btn-link rounded-fit d-inline-block text-center p-2" style="width:150px;">choix du fournisseur</a>
+                                    <a href="gestion-suivi-commande-fournisseur.php" class="mb-3 small btn-link rounded-fit d-inline-block text-center p-2" style="width:150px;">choix du fournisseur</a>
                                 </div>
                             <?php elseif($code == 4): ?>
                                 <div class="date mt-4 font-weight-bold">Date de réception de la commande : <span id="date-reception">02/01/2022</span></div>

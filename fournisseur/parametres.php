@@ -9,6 +9,11 @@ $router->transporteurIsConnected();
 
 $router->request();
 
+$db = $router->getDb();
+
+$transporteur = $router->getTransporteur();
+$identifiant = $db->findOneBy("identifiant", ["transporteur" => $transporteur["id"]]);
+
 $param_link = 1;
 if(isset($_GET['params'])) {
     $param_link = $_GET['params'];
@@ -150,7 +155,7 @@ if(isset($_GET['params'])) {
                             <a href="map.php" class="params-link text-decoration-none">Map</a>
                             <a href="parametres.php?params=2" class="params-link <?= isset($param_link) && $param_link == 2 ? 'active' : '' ?> text-decoration-none">Compte</a>
                             <a href="a-savoir.php" class="params-link text-decoration-none">A propos</a>
-                            <a href="signout.php" class="params-link text-decoration-none">Déconnexion</a>
+                            <a href="logout.php" class="params-link text-decoration-none">Déconnexion</a>
                         </div>
                     </div>
 
@@ -176,7 +181,7 @@ if(isset($_GET['params'])) {
                         <form method="post" enctype="multipart/form-data" class="w-100 mt-5">
                             <div class="d-flex justify-content-center align-items-center mb-2">
                                 <span class="position-relative zhg-image">
-                                    <img src="<?= $router->getAvatar($router->getTransporteur()->getImage()); ?>" alt="" class="mw-100 mh-100" />
+                                    <img src="<?= $router->getAvatar($transporteur["image"]); ?>" alt="" class="mw-100 mh-100" />
                                     <a href="#" type="button" class="btn-primary d-flex justify-content-center align-items-center" style="position:absolute;bottom:0px;right:0;width:35px;height:35px;border-radius:50%;overflow:hidden;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-camera-fill" viewBox="0 0 16 16" style="width:40%;height:40%;">
                                             <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
@@ -198,42 +203,42 @@ if(isset($_GET['params'])) {
                                                 </svg> Identifiant
                                             </label><span class="">:</span>
                                         </div>
-                                        <div class="col"><input type="text" name="upd_compte_transporteur[identifiant]" class="form-control rounded-pill shadow-none" id="compte_transporteur_identifiant" placeholder="" value="<?= $router->getValPost(['upd_compte_transporteur', 'identifiant']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'identifiant']) : $router->getTransporteur()->getCodePlain(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_transporteur[identifiant]" class="form-control rounded-pill shadow-none" id="compte_transporteur_identifiant" placeholder="" value="<?= $router->getValPost(['upd_compte_transporteur', 'identifiant']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'identifiant']) : $identifiant["code"]??""; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('identifiant'); ?>
                                 </div>
                                 <div class="form-group mb-" id="nom">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_transporteur_prenom" class="">Nom</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_transporteur[nom]" class="form-control rounded-pill shadow-none" id="compte_transporteur_prenom" placeholder="Prénom" value="<?= $router->getValPost(['upd_compte_transporteur', 'nom']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'nom']) : $router->getTransporteur()->getNom(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_transporteur[nom]" class="form-control rounded-pill shadow-none" id="compte_transporteur_prenom" placeholder="Prénom" value="<?= $router->getValPost(['upd_compte_transporteur', 'nom']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'nom']) : $transporteur["nom"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('nom'); ?>
                                 </div>
                                 <div class="form-group mb-" id="prenom">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_transporteur_prenom" class="">Prénom</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_transporteur[prenom]" class="form-control rounded-pill shadow-none" id="compte_transporteur_prenom" placeholder="Prénom" value="<?= $router->getValPost(['upd_compte_transporteur', 'prenom']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'prenom']) : $router->getTransporteur()->getPrenom(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_transporteur[prenom]" class="form-control rounded-pill shadow-none" id="compte_transporteur_prenom" placeholder="Prénom" value="<?= $router->getValPost(['upd_compte_transporteur', 'prenom']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'prenom']) : $transporteur["prenom"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('prenom'); ?>
                                 </div>
                                 <div class="form-group mb-" id="email">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_transporteur_email" class="">Email</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_transporteur[email]" class="form-control rounded-pill shadow-none" id="compte_transporteur_email" placeholder="Email" value="<?= $router->getValPost(['upd_compte_transporteur', 'email']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'email']) : $router->getTransporteur()->getEmail(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_transporteur[email]" class="form-control rounded-pill shadow-none" id="compte_transporteur_email" placeholder="Email" value="<?= $router->getValPost(['upd_compte_transporteur', 'email']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'email']) : $transporteur["email"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('email'); ?>
                                 </div>
                                 <div class="form-group mb-" id="adresse">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_transporteur_adresse" class="">Ville/Adresse</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_transporteur[adresse]" class="form-control rounded-pill shadow-none" id="compte_transporteur_adresse" placeholder="" value="<?= $router->getValPost(['compte_transporteur', 'adresse']) !== '' ? $router->getValPost(['compte_transporteur', 'adresse']) : $router->getTransporteur()->getAdresse(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_transporteur[adresse]" class="form-control rounded-pill shadow-none" id="compte_transporteur_adresse" placeholder="" value="<?= $router->getValPost(['compte_transporteur', 'adresse']) !== '' ? $router->getValPost(['compte_transporteur', 'adresse']) : $transporteur["adresse"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('adresse'); ?>
                                 </div>
                                 <div class="form-group mb-" id="phone">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_transporteur_phone" class="">Tél.</label><span class="">:</span></div>
-                                        <div class="col"><input type="tel" name="upd_compte_transporteur[phone]" class="form-control rounded-pill shadow-none" id="compte_transporteur_phone" placeholder="" value="<?= $router->getValPost(['upd_compte_transporteur', 'phone']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'phone']) : $router->getTransporteur()->getPhone(); ?>"></div>
+                                        <div class="col"><input type="tel" name="upd_compte_transporteur[phone]" class="form-control rounded-pill shadow-none" id="compte_transporteur_phone" placeholder="" value="<?= $router->getValPost(['upd_compte_transporteur', 'phone']) !== '' ? $router->getValPost(['upd_compte_transporteur', 'phone']) : $transporteur["phone"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('phone'); ?>
                                 </div>

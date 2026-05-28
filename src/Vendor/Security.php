@@ -1,9 +1,6 @@
 <?php
 namespace src\Vendor;
 
-use src\Entity\Admin;
-use src\Entity\Dentiste;
-use src\Entity\Transporteur;
 use src\Vendor\Outil;
 
 if( ! session_id() ){session_start();}
@@ -17,12 +14,7 @@ class Security extends Outil
         parent::__construct();
     }
 
-    // public function getRoutes(): Routes
-    // {
-    //     return $this->routes;
-    // }
-
-    public function getAdmin(): ?Admin
+    public function getAdmin()
     {
         if(isset($_SESSION['admin'])) {
             return unserialize($_SESSION['admin']);
@@ -30,7 +22,7 @@ class Security extends Outil
         return null;
     }
 
-    public function getDentiste(): ?Dentiste
+    public function getDentiste()
     {
         if(isset($_SESSION['dentiste'])) {
             return unserialize($_SESSION['dentiste']);
@@ -38,7 +30,7 @@ class Security extends Outil
         return null;
     }
 
-    public function getTransporteur(): ?Transporteur
+    public function getTransporteur()
     {
         if(isset($_SESSION['transporteur'])) {
             return unserialize($_SESSION['transporteur']);

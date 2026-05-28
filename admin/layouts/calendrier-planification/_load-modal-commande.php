@@ -2,32 +2,32 @@
 <div class="accordion" id="accordionExample">
 <?php foreach ($commandes as $key => $commande): ?>
 
-    <div class="card border-0" id="card-<?= $commande->getId() ?>">
+    <div class="card border-0" id="card-<?= $commande["id"] ?>">
 
-        <div class="card-header" id="heading<?= $commande->getId(); ?>">
+        <div class="card-header" id="heading<?= $commande["id"]; ?>">
             <h5 class="mb-0">
-                <button class="btn btn-block btn-link word-break" type="button" data-toggle="collapse" data-target="#collapse<?= $commande->getId(); ?>" aria-expanded="false" aria-controls="collapse<?= $commande->getId(); ?>">CO-<?= strtoupper($commande->getSlug()); ?></button>
+                <button class="btn btn-block btn-link word-break" type="button" data-toggle="collapse" data-target="#collapse<?= $commande["id"]; ?>" aria-expanded="false" aria-controls="collapse<?= $commande["id"]; ?>">CO-<?= strtoupper($commande["slug"]); ?></button>
             </h5>
         </div>
 
-        <div id="collapse<?= $commande->getId(); ?>" class="collapse" aria-labelledby="heading<?= $commande->getId(); ?>" data-parent="#accordionExample">
+        <div id="collapse<?= $commande["id"]; ?>" class="collapse" aria-labelledby="heading<?= $commande["id"]; ?>" data-parent="#accordionExample">
 
             <!-- Begin Main -->
             <div class="w-100 border-bottom pt-3">
 
                 <div class="d-flex mb-3">
                     <div class="col-6 pl-0">Dentiste :</div>
-                    <div class="col-6 font-weight-bold" id="username-dentiste"><?= $commande->getDentiste()->getUsername(); ?></div>
+                    <div class="col-6 font-weight-bold" id="username-dentiste"><?= $router->getUsername($commande["nom_dentiste"], $commande["prenom_dentiste"]); ?></div>
                 </div>
 
                 <div class="d-flex mb-3">
                     <div class="col-6 pl-0">Cabinet :</div>
-                    <div class="col-6 font-weight-bold" id="username-cabinet"><?= $commande->getDentiste()->getCabinet(); ?></div>
+                    <div class="col-6 font-weight-bold" id="username-cabinet"><?= $commande["cabinet_dentiste"]; ?></div>
                 </div>
 
                 <div class="d-flex mb-3">
                     <div class="col-6 pl-0">Ville / Adresse :</div>
-                    <div class="col-6 font-weight-bold" id="address"><?= $commande->getDentiste()->getAdresse(); ?></div>
+                    <div class="col-6 font-weight-bold" id="address"><?= $commande["adresse_dentiste"]; ?></div>
                 </div>
 
                 <div class="mb-4">
@@ -43,13 +43,23 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php $choix_protheses = $commande->getChoixProtheses(); ?>
+                                <?php 
+                                    $choix_protheses = $router->getDb()->query(
+                                        "SELECT cP.*, p.numero numero_prothese
+                                        FROM choix_prothese cP
+                                        INNER JOIN commande c
+                                        ON cP.commande = c.id
+                                        INNER JOIN prothese p
+                                        ON cP.prothese = p.id
+                                        WHERE cP.commande=:cmd", ["cmd" => $commande["id"]]
+                                    )->fetchAll();
+                                ?>
                                 <?php foreach($choix_protheses as $prot): ?>
                                     <tr>
-                                        <td id="username-patient"><?= $commande->getUsernamePatient(); ?></td>
-                                        <td id="number-case"><?= $prot->getProthese()->getNumero(); ?></td>
-                                        <td id="details-commande"><?= nl2br($router->getValue($prot->getDetailsCommande())); ?></td>
-                                        <td id="modif"><?= nl2br($router->getValue($prot->getModifDemand())); ?></td>
+                                        <td id="username-patient"><?= $router->getUsername($commande["nom_patient"], $commande["prenom_patient"]); ?></td>
+                                        <td id="number-case"><?= $prot["numero_prothese"]; ?></td>
+                                        <td id="details-commande"><?= nl2br($router->getValue($prot["details_commande"])); ?></td>
+                                        <td id="modif"><?= nl2br($router->getValue($prot["modif_demand"])); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -59,37 +69,37 @@
 
                 <div class="d-flex mb-3">
                     <div class="col-6 pl-0">Date d'envoie de la commande :</div>
-                    <div class="col-6 font-weight-bold" id="address"><?= (new \DateTime($commande->getDateEnvoie()))->format('d/m/Y'); ?></div>
+                    <div class="col-6 font-weight-bold" id="address"><?= (new \DateTime($commande["date_envoie"]))->format('d/m/Y'); ?></div>
                 </div>
                 <div class="d-flex mb-3">
                     <div class="col-6 pl-0">Date de réception prévue de la commande :</div>
-                    <div class="col-6 font-weight-bold" id="address"><?= (new \DateTime($commande->getDateReceptionPrevue()))->format('d/m/Y'); ?></div>
+                    <div class="col-6 font-weight-bold" id="address"><?= (new \DateTime($commande["date_reception_prevue"]))->format('d/m/Y'); ?></div>
                 </div>
 
-                <?php if($commande->getLivraison() == 2): ?>
+                <?php if($commande["livraison"] == 2): ?>
                     <div class="d-flex mb-3">
                         <div class="col-6 pl-0">Date de livraison de la commande :</div>
-                        <div class="col-6 font-weight-bold" id="address"><?= (new \DateTime($commande->getDateLivraison()))->format('d/m/Y'); ?></div>
+                        <div class="col-6 font-weight-bold" id="address"><?= (new \DateTime($commande["date_livraison"]))->format('d/m/Y'); ?></div>
                     </div>
                 <?php endif; ?>
 
-                <?php if($clink == 1 && $commande->getValide() == 0): ?>
+                <?php if($clink == 1 && $commande["valide"] == 0): ?>
 
                     <div class="d-flex justify-content-around align-items-center">
 
-                        <form method="post" class="mb-3" data-uniq-s="<?= $commande->getId() ?>" onsubmit="setStateCommand(this, 'accept');">
+                        <form method="post" class="mb-3" data-uniq-s="<?= $commande["id"] ?>" onsubmit="setStateCommand(this, 'accept');">
                             <div class="text-center">
                                 <button type="butto" class="btn px-4 bg-ederalab text-white border-0 shadow-none" style="border-radius:.5rem;">Accepter la commande</button>
                             </div>
-                            <input type="hidden" name="accept_cmd[commande]" value="<?= $commande->getId(); ?>"/>
+                            <input type="hidden" name="accept_cmd[commande]" value="<?= $commande["id"]; ?>"/>
                             <input type="hidden" name="csrf" value="<?= password_hash('accept-command', 1); ?>">
                         </form>
 
-                        <form method="post" class="mb-3" data-uniq-s="<?= $commande->getId() ?>" onsubmit="setStateCommand(this, 'cancel');">
+                        <form method="post" class="mb-3" data-uniq-s="<?= $commande["id"] ?>" onsubmit="setStateCommand(this, 'cancel');">
                             <div class="text-center">
                                 <button type="butto" class="btn px-4 bg-ederalab text-white border-0 shadow-none" style="border-radius:.5rem;">Refuser la commande</button>
                             </div>
-                            <input type="hidden" name="cancel_cmd[commande]" value="<?= $commande->getId(); ?>"/>
+                            <input type="hidden" name="cancel_cmd[commande]" value="<?= $commande["id"]; ?>"/>
                             <input type="hidden" name="csrf" value="<?= password_hash('cancel-command', 1); ?>">
                         </form>
 
@@ -103,7 +113,7 @@
                     </div>
                     <div class="d-flex mb-3">
                         <div class="col-6 pl-0">Transporteur :</div>
-                        <div class="col-6 font-weight-bold" id="address"><?= $commande->getTransporteur() ? $commande->getTransporteur()->getUsername() : '#undefined'; ?></div>
+                        <div class="col-6 font-weight-bold" id="address"><?= isset($commande["prenom_transporteur"]) || isset($commande["nom_transporteur"]) ? $router->getUsername($commande["nom_transporteur"]??"", $commande["prenom_transporteur"]??"") : '#undefined'; ?></div>
                     </div>
 
                 <?php endif; ?>

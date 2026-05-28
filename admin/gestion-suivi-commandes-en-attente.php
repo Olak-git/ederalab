@@ -3,7 +3,6 @@
 // route: gestion-commandes-en-attente
 
 use src\Router\Router;
-use src\Repository\CommandeRepository;
 
 include '../autoload.php';
 
@@ -11,9 +10,17 @@ $router = new Router;
 
 $router->adminIsConnected();
 
-$commandeRepository = new CommandeRepository;
+$db = $router->getDb();
 
-$commandes = $commandeRepository->findCommandeEnAttente();
+$commandes = $db->query(
+    "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste 
+    FROM commande c
+    INNER JOIN dentiste d 
+    ON c.dentiste = d.id
+    WHERE c.archive = 0 
+    AND c.valide = 1
+    AND c.livraison = 0"
+)->fetchAll();
 
 $alink = 2;
 $code = 3;
@@ -41,9 +48,9 @@ $code = 3;
                     data-name-value="cmd_attente" 
                     class="btn-block d-flex justify-content-between align-items-center bg-white p-2 rounded-fit text-dark text-decoration-none show-modal-commande border border-ederalab" style="min-height:50px;">
                     <div class="" style="max-width:80%;">
-                        <?= $commande->getDentiste()->getUsername(); ?>, <?= $commande->getUsernamePatient(); ?>
+                        <?= $router->getUsername($commande["nom_dentiste"], $commande["prenom_dentiste"]); ?>, <?= $router->getUsername($commande["nom_patient"], $commande["prenom_patient"]); ?>
                     </div>
-                    <span class="font-weight-bold"><?= (new \DateTime($commande->getDateReceptionPrevue()))->format('d/m/Y'); ?></span>
+                    <span class="font-weight-bold"><?= (new \DateTime($commande["date_reception_prevue"]))->format('d/m/Y'); ?></span>
                 </a>                
             <?php endforeach; ?>
             

@@ -25,37 +25,6 @@
                                 <div class="col-6 pl-0">Adresse :</div>
                                 <div class="col-6 font-weight-bold" id="adresse">#undefined</div>
                             </div>
-                            <?php /*<div class="mb-4">
-                                <div>
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <td class="text-center">Nom du client</td>
-                                                <td class="text-center">Cas n°</td>
-                                                <td class="text-center">Détails de la commande</td>
-                                                <td class="text-center">Modif. demandée</td>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td id="username-patient">#undefined</td>
-                                                <td id="number-case">#undefined</td>
-                                                <td id="details-commande">#undefined</td>
-                                                <td id="modif">#undefined</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="d-flex mb-3">
-                                <div class="col-6 pl-0">Date d'envoie de la commande :</div>
-                                <div class="col-6 font-weight-bold" id="address">#undefined</div>
-                            </div>
-                            <div class="d-flex mb-3">
-                                <div class="col-6 pl-0">Date de réception prévue de la commande :</div>
-                                <div class="col-6 font-weight-bold" id="address">#undefined</div>
-                            </div>*/ ?>
 
                             <div class="d-flex mb-3">
                                 <div class="col-6 pl-0">Date de réception prévue de la commande :</div>

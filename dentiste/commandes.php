@@ -1,6 +1,5 @@
 <?php
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 
 require_once '../autoload.php';
@@ -8,11 +7,20 @@ require_once '../autoload.php';
 $router = new Router;
 
 $router->dentisteIsConnected();
+$db = $router->getDb();
 
 $user = $router->getDentiste();
 
-$commandesOfToday = []; //$user->findOrdersCommandToday();
-$commandesOfLongTime = (new CommandeRepository)->findAll(); //$user->findOrdersCommandLongTime();
+$commandesOfToday = [];
+$commandesOfLongTime = $db->findAll("commande");
+// $commandesOfLongTime = $db->query(
+//     'SELECT c.* 
+//     FROM commande c 
+//     INNER JOIN dentiste d 
+//         ON c.dentiste = d.id 
+//     WHERE d.id = :did 
+//     AND c.date_envoie < :dat', ['did' => $user["id"], 'dat' => date('Y-m-d')]
+// )->fetchAll();
 
 ob_start();
 ?>
@@ -113,11 +121,11 @@ ob_start();
                         type="button" 
                         data-toggle="modal" 
                         data-target="#commandeModal" 
-                        data-command-slug="<?= $cmd->getSlug(); ?>"  
+                        data-command-slug="<?= $cmd["slug"]; ?>"  
                         class="show-modal-commande col-11 text-decoration-none text-dark">
                         <div class="d-flex flex-wrap w-100">
-                            <div class="col-12 col-sm-6 col-md-8"><?= $cmd->getUsernamePatient(); ?></div>
-                            <div class="col-12 col-sm-6 col-md-4"><?= (new \DateTime($cmd->getDateEnvoie()))->format('d/m/Y'); ?></div>
+                            <div class="col-12 col-sm-6 col-md-8"><?= $router->getUsername($cmd["nom_patient"], $cmd["prenom_patient"]); ?></div>
+                            <div class="col-12 col-sm-6 col-md-4"><?= (new \DateTime($cmd["date_envoie"]))->format('d/m/Y'); ?></div>
                         </div>
                     </a>
                     <div class="col text-right px-">
@@ -127,7 +135,7 @@ ob_start();
                                     <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
                                 </svg>
                             </button>
-                            <input type="hidden" name="commande" value="<?= $cmd->getSlug(); ?>">
+                            <input type="hidden" name="commande" value="<?= $cmd["slug"]; ?>">
                             <input type="hidden" name="csrf" value="<?= password_hash('del-command', 1); ?>">
                         </form>
                     </div>

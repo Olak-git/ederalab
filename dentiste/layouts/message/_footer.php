@@ -29,7 +29,7 @@
                             <input type="file" name="image" accept="image/*" class="d-none">
                             <input type="file" name="doc" accept=".doc, .docx, .pdf, .txt, .csv, .ppt, .pptx, .zip, .rar, .jpg, .gif, .png, .jpeg" class="d-none">
                             <input type="hidden" name="chat[exp]" value="<?= password_hash('dentiste', 1); ?>">
-                            <input type="hidden" name="chat[dest]" value="<?= $router->getDentiste()->getSlug(); ?>">
+                            <input type="hidden" name="chat[dest]" value="<?= $router->getDentiste()["slug"]; ?>">
                             <input type="hidden" name="chat[compte_dest]" value="dentiste">
                             <input type="hidden" name="csrf" value="<?= password_hash('chat', 1); ?>">
                             

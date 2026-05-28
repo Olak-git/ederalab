@@ -10,6 +10,8 @@ $router->dentisteIsConnected();
 
 $router->request();
 
+$db = $router->getDb();
+
 $year = date('Y');
 $month = date('m');
 
@@ -24,8 +26,24 @@ if(isset($_POST['m'])) {
 $calendar = new CalendarService($year, $month);
 $weeks = $calendar->getWeeks();
 
-$total_commande_livree = $router->getDentiste()->getTotalCommandesLivrees();
-$total_commande_en_cours = $router->getDentiste()->getTotalCommandesEncours();
+$dentiste = $router->getDentiste();
+
+$total_commande_livree = $db->query(
+    "SELECT COUNT(c.id) n 
+    FROM commande c 
+    INNER JOIN dentiste d 
+        ON c.dentiste = d.id 
+    WHERE d.id = :did 
+    AND livraison = 2", ["did" => $dentiste["id"]]
+)->fetchColumn();
+$total_commande_en_cours = $db->query(
+    "SELECT COUNT(c.id) n 
+    FROM commande c 
+    INNER JOIN dentiste d 
+        ON c.dentiste = d.id 
+    WHERE d.id = :did 
+    AND (livraison = 0 OR livraison = 1)", ["did" => $dentiste["id"]]
+)->fetchColumn();
 
 $header_link = 1;
 

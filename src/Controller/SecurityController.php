@@ -1,20 +1,20 @@
 <?php
 namespace src\Controller;
 
+use src\Vendor\DB;
 use src\Vendor\Security;
 use src\Vendor\EntityManager;
 use src\Services\MailerService;
 use src\Services\HTMLMailService;
-use src\Repository\AdminRepository;
-use src\Repository\DentisteRepository;
-use src\Repository\IdentifiantRepository;
-use src\Repository\TransporteurRepository;
 
 class SecurityController extends Security
 {
+    private $db;
+
     public function __construct()
     {
         parent::__construct();
+        $this->db = new DB;
     }
 
     public function isBlank($form, $key, $index)
@@ -46,8 +46,8 @@ class SecurityController extends Security
             if(empty($post['pass'])) {
                 $this->addError('pass', 'Est requis');
             } else {
-                $admin = (new AdminRepository)->findOneBy(['active' => 1]);
-                if($admin && $this->isCsrfValidate($post['pass'], $admin->getIdentifiant())) {
+                $admin = $this->db->findOneBy("admin", ['active' => 1]);
+                if($admin && $this->isCsrfValidate($post['pass'], $admin["identifiant"])) {
                     $_SESSION['admin'] = serialize($admin);
                 } else {
                     $this->addError('pass', 'Compte non identifié');
@@ -68,10 +68,10 @@ class SecurityController extends Security
             if(empty($form['identifiant'])) {
                 $this->addError('identifiant', 'Est requis');
             } else {
-                $identifiant = (new IdentifiantRepository)->findOneBy(['code' => $form['identifiant']]);
+                $identifiant = $this->db->findOneBy("identifiant", ['code' => $form['identifiant']]);
                 if($identifiant) {
-                    $transporteur = $identifiant->getTransporteur();
-                    if($transporteur && $this->isCsrfValidate($form['identifiant'], $transporteur->getIdentifiant())) {
+                    $transporteur = $this->db->findOneBy("transporteur", ['id' => $identifiant["transporteur"]]);
+                    if($transporteur && $this->isCsrfValidate($form['identifiant'], $transporteur["identifiant"])) {
                         $_SESSION['transporteur'] = serialize($transporteur);
                         header('Location: accueil.php');
                     } else {
@@ -98,18 +98,10 @@ class SecurityController extends Security
                 $password = $form['password'];
             }
             if(!$this->hasError()) {
-                $user = (new DentisteRepository)->findOneBy(['email' => $email]);
+                $user = $this->db->findOneBy("dentiste", ['email' => $email]);
                 if($user) {
-                    if(password_verify($password, $user->getPassword())) {
-                        // $user->setConnecte(1);
-                        // $user->setTimestamp(time());
-                        // $user->setTimestamp(strtotime((new \DateTime())->format('Y-m-d H:i:s')));
-
-                        // $em = new EntityManager;
-                        // $em->update($user);
-                        
+                    if(password_verify($password, $user["password"])) {                        
                         $_SESSION['dentiste'] = serialize($user);
-
                         header('Location: accueil.php');
 
                     } else {
@@ -130,18 +122,15 @@ class SecurityController extends Security
         if(isset($post['csrf']) && $this->isCsrfValidate('reset-identifiant', $post['csrf'])) {
             $form = $post['admin_reset_identifiant'];
             if(!$this->isBlank($form, 'email', 'email')) {
-                $user = (new AdminRepository)->findOneBy(['email' => $form['email']]);
-                if($user) {
+                $admin = $this->db->findOneBy("admin", ['email' => $form['email']]);
+                if($admin) {
                     $em = new EntityManager;
                     $pswd = $this->generatePassword();
-
-                    $user->setIdentifiant(password_hash($pswd, 1));
-    
-                    $em->update($user);
+                    (new EntityManager)->update("admin", ["identifiant" => password_hash($pswd, 1)], $admin["id"]);
 
                     // Envoie de mail
                     $message = (new HTMLMailService(['psw' => $pswd]))->getResetPasswordForgetMessage();
-                    $mailerService = new MailerService($user->getEmail(), 'Réinitialisation de l\'identifiant', $message);
+                    $mailerService = new MailerService($admin["email"], 'Réinitialisation de l\'identifiant', $message);
                     $mailerService->send();
     
                     $this->setShowNotification(true);
@@ -160,22 +149,19 @@ class SecurityController extends Security
         if(isset($post['csrf']) && $this->isCsrfValidate('reset-identifiant', $post['csrf'])) {
             $form = $post['collaborateur_reset_identifiant'];
             if(!$this->isBlank($form, 'email', 'email')) {
-                $user = (new TransporteurRepository)->findOneBy(['email' => $form['email']]);
-                if($user) {
+                $transporteur = $this->db->findOneBy("transporteur", ['email' => $form['email']]);
+                if($transporteur) {
                     $em = new EntityManager;
                     $pswd = $this->generatePassword();
-
-                    $user->setIdentifiant(password_hash($pswd, 1));
-    
-                    $identifiant = $user->getEntityCode();
-                    $identifiant->setCode($pswd);
-    
-                    $em->update($user);
-                    $em->update($identifiant);
+                    
+                    $em->update("transporteur", ["identifiant" => password_hash($pswd, 1)], $transporteur["id"]);
+                    $em->update("identifiant", ["code" => $pswd], [
+                        ['transporteur', "=", $transporteur["id"]]
+                    ]);
 
                     // Envoie de mail
                     $message = (new HTMLMailService(['psw' => $pswd]))->getResetPasswordForgetMessage();
-                    $mailerService = new MailerService($user->getEmail(), 'Réinitialisation de l\'identifiant', $message);
+                    $mailerService = new MailerService($transporteur["email"], 'Réinitialisation de l\'identifiant', $message);
                     $mailerService->send();
     
                     $this->setShowNotification(true);
@@ -194,16 +180,14 @@ class SecurityController extends Security
         if(isset($post['csrf']) && $this->isCsrfValidate('reset-password', $post['csrf'])) {
             $form = $post['dentiste_reset_password'];
             if(!$this->isBlank($form, 'email', 'email')) {
-                $user = (new DentisteRepository)->findOneBy(['email' => $form['email']]);
-                if($user) {
+                $dentiste = $this->db->findOneBy("dentiste", ['email' => $form['email']]);
+                if($dentiste) {
                     $pswd = $this->generatePassword();
-                    $user->setPassword($pswd);
-                    $em = new EntityManager;
-                    $em->updatePassword($user);
+                    (new EntityManager)->update("dentiste", ["password" => password_hash($pswd, 1)], $dentiste["id"]);
 
                     // Envoie de mail
                     $message = (new HTMLMailService(['psw' => $pswd]))->getResetPasswordForgetMessage();
-                    $mailerService = new MailerService($user->getEmail(), 'Réinitialisation de mot de passe', $message);
+                    $mailerService = new MailerService($dentiste["email"], 'Réinitialisation de mot de passe', $message);
                     $mailerService->send();
     
                     $this->setShowNotification(true);

@@ -1,22 +1,21 @@
 <?php
 namespace src\Controller;
 
-use src\Entity\Commande;
+use src\Vendor\DB;
 use src\Vendor\Security;
-use src\Entity\ChoixProthese;
 use src\Services\FileService;
 use src\Vendor\EntityManager;
-use src\Entity\ChoixTransporteur;
-use src\Repository\CommandeRepository;
-use src\Repository\ProtheseRepository;
-use src\Repository\TransporteurRepository;
-use src\Repository\ChoixTransporteurRepository;
+use src\traits\Properties;
 
 class CommandeController extends Security
 {
+    use Properties;
+    private $db;
+
     public function __construct()
     {
         parent::__construct();
+        $this->db = new DB;
     }
 
     public function valideDate($date, $format = 'Y-m-d')
@@ -39,7 +38,7 @@ class CommandeController extends Security
                 if(empty($form['commande'])) {
                     $this->addError('commande', 'Une erreur non identifiée a été repérée.');
                 } else {
-                    $commande = (new CommandeRepository)->findOneBy(['id' => $form['commande']]);
+                    $commande = $this->db->findOneBy("commande", ['id' => $form['commande']]);
                     if(null == $commande) {
                         $this->addError('commande', 'Commande non identifiée.');
                     }
@@ -48,22 +47,21 @@ class CommandeController extends Security
                 if(empty($form['transporteur'])) {
                     $this->addError('transporteur', 'Une erreur non identifiée a été repérée.');
                 } else {
-                    $transporteur = (new TransporteurRepository)->findOneBy(['id' => $form['transporteur']]);
+                    $transporteur = $this->db->findOneBy("transporteur", ['id' => $form['transporteur']]);
                     if(null == $transporteur) {
                         $this->addError('transporteur', 'Transporteur non identifiée.');
                     }
                 }
 
                 if(!$this->hasError()) {
-                    $em = new EntityManager;
-                    $choixTransporter = (new ChoixTransporteurRepository)->findOneBy(['commande' => $commande->getId(), 'transporteur' => $transporteur->getId()]);
+                    $choixTransporter = $this->db->findOneBy("choix_transporteur", ['commande' => $commande["id"], 'transporteur' => $transporteur["id"]]);
                     if(!$choixTransporter) {
-                        $choixTransporteur = new ChoixTransporteur([
-                            'commande' => $commande->getId(),
-                            'transporteur' => $transporteur->getId(),
+                        (new EntityManager)->add("choix_transporteur", [
+                            "slug" => $this->createSlug(),
+                            'commande' => $commande["id"],
+                            'transporteur' => $transporteur["id"],
                             'date_reception' => date('Y-m-d H:i:s')
                         ]);
-                        $em->add($choixTransporteur);
                     }
                     $this->setShowNotification(true);
                     $this->setNotificationColor('bg-success');
@@ -81,11 +79,9 @@ class CommandeController extends Security
                 if(empty($post['accept_cmd']['commande'])) {
                     $this->addError('error', 'Erreur non identifiée survenue.');
                 } else {
-                    $commande = (new CommandeRepository)->findOneBy(['id' => $post['accept_cmd']['commande']]);
+                    $commande = $this->db->findOneBy("commande", ['id' => $post['accept_cmd']['commande']]);
                     if($commande) {
-                        $em = new EntityManager;
-                        $commande->setValide(1);
-                        $em->update($commande);
+                        (new EntityManager)->update("commande", ["valide" => 1], $commande["id"]);
 
                         $this->setShowNotification(true);
                         $this->setNotificationColor('bg-success');
@@ -108,11 +104,9 @@ class CommandeController extends Security
                 if(empty($post['cancel_cmd']['commande'])) {
                     $this->addError('error', 'Erreur non identifiée survenue.');
                 } else {
-                    $commande = (new CommandeRepository)->findOneBy(['id' => $post['cancel_cmd']['commande']]);
+                    $commande = $this->db->findOneBy("commande", ['id' => $post['cancel_cmd']['commande']]);
                     if($commande) {
-                        $em = new EntityManager;
-                        $commande->setValide(-1);
-                        $em->update($commande);
+                        (new EntityManager)->update("commande", ["valide" => -1], $commande["id"]);
 
                         $this->setShowNotification(true);
                         $this->setNotificationColor('bg-success');
@@ -136,23 +130,19 @@ class CommandeController extends Security
                 if(empty($form['commande'])) {
                     $this->addError('commande', 'Une erreur non identifiée a été repérée.');
                 } else {
-                    $commande = (new CommandeRepository)->findOneBy(['id' => $form['commande']]);
+                    $commande = $this->db->findOneBy("commande", ['id' => $form['commande']]);
                     if(null == $commande) {
                         $this->addError('commande', 'Commande non identifiée.');
+                    } else {
+                        (new EntityManager)->update("commande", ["archive" => 1, "date_archive" => date('Y-m-d')], $commande["id"]);
+
+                        $this->setShowNotification(true);
+                        $this->setNotificationColor('bg-success');
+                        $this->addNotification('Commande archivée avec succès.');
                     }
                 }
             } else {
                 $this->addError('csrf', 'Csrf non valide.');
-            }
-            if(!$this->hasError()) {
-                $em = new EntityManager;
-                $commande->setArchive(1);
-                $commande->setDateArchive(date('Y-m-d'));
-                $em->update($commande);
-
-                $this->setShowNotification(true);
-                $this->setNotificationColor('bg-success');
-                $this->addNotification('Commande archivée avec succès.');
             }
         }
     }
@@ -211,13 +201,13 @@ class CommandeController extends Security
                     $this->addError('prothese', 'Veuillez indiquer le cas de prothèse que vous voulez.');
                 } else {
                     foreach($form['cas_prothese'] as $ky => $pro) {
-                        $prothese = (new ProtheseRepository)->findOneBy(['id' => $pro]);
+                        $prothese = $this->db->findOneBy("prothese", ['id' => $pro]);
                         if(!$prothese) {
                             $this->addError('prothese', 'Prothèse non identifiée.');
                         } else {
                             $protheses[] = [
-                                'prothese' => $prothese->getId(),
-                                'cas_num' => $prothese->getNumero(),
+                                'prothese' => $prothese["id"],
+                                'cas_num' => $prothese["numero"],
                                 'modif_demand' => $form['modification_dmd'][$ky]
                             ];
                         }
@@ -255,16 +245,21 @@ class CommandeController extends Security
                 }
 
                 if(!$this->hasError()) {
-                    $data['dentiste'] = $dentiste->getId();
                     $em = new EntityManager;
-                    $commande = new Commande($data);
-                    $em->add($commande);
+
+                    $data['dentiste'] = $dentiste["id"];
+                    $id = $em->add("commande", array_merge($data, [
+                        "archive" => 0,
+                        "valide" => 0,
+                        "livraison" => 0,
+                        "slug" => $this->createSlug()
+                    ]));
 
                     foreach($protheses as $pro) {
-                        $pro['commande'] = $commande->getId();
-                        $pro['nom_patient'] = $commande->getUsernamePatient();
-                        $choixProthese = new ChoixProthese($pro);
-                        $em->add($choixProthese);
+                        $pro['commande'] = $id;
+                        $pro['nom_patient'] = ucwords($data['nom_patient'] . ' ' . $data['prenom_patient']);
+                        $pro["slug"] = $this->createSlug();
+                        $em->add("choix_prothese", $pro);
                     }
 
                     $this->setShowNotification(true);
@@ -282,16 +277,16 @@ class CommandeController extends Security
             {
                 $form = $post['delivery'];
                 if(!empty($form['command'])) {
-                    $commande = (new CommandeRepository)->findOneBy(['dentiste' => $dentiste->getId(), 'valide' => 1, 'slug' => $form['command']]);
+                    $commande = $this->db->findOneBy("commande", ['dentiste' => $dentiste["id"], 'valide' => 1, 'slug' => $form['command']]);
                     if($commande) {
+                        $data = [];
                         if($form['v'] == 2) {
-                            $commande->setLivraison(2);
-                            $commande->setDateLivraison(date('Y-m-d'));
+                            $data["livraison"] = 2;
+                            $data["date_livraison"] = date('Y-m-d');
                         } elseif($form['v'] == -1) {
-                            $commande->setLivraison(-1);
+                            $data["livraison"] = -1;
                         }
-                        $em = new EntityManager;
-                        $em->update($commande);
+                        (new EntityManager)->update("commande", $data, $commande["id"]);
                     } else {
                         $this->addError('command', '');
                     }

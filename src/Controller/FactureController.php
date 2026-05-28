@@ -1,16 +1,21 @@
 <?php
 namespace src\Controller;
 
-use src\Entity\Facture;
+use src\Vendor\DB;
 use src\Vendor\Security;
 use src\Vendor\EntityManager;
-use src\Repository\CommandeRepository;
+use src\traits\Properties;
 
 class FactureController extends Security
 {
+    use Properties;
+
+    private $db;
+
     public function __construct()
     {
         parent::__construct();
+        $this->db = new DB;
     }
 
     public function isBlank($form, $key, $index)
@@ -45,9 +50,9 @@ class FactureController extends Security
                 $data = [];
 
                 if(!empty($form['cmd'])) {
-                    $cmd = (new CommandeRepository)->findOneBy(['valide' => 1, 'livraison' => 2, 'slug' => $form['cmd']]);
+                    $cmd = $this->db->findOneBy("commande", ['valide' => 1, 'livraison' => 2, 'slug' => $form['cmd']]);
                     if($cmd) {
-                        $data['commande'] = $cmd->getId();
+                        $data['commande'] = $cmd["id"];
                         
                         if(!$this->isBlank($form, 'total_ht', 'total_ht')) {
                             if(preg_match('#^[0-9]+[.]?[0-9]*#', $form['total_ht'])) {
@@ -70,9 +75,11 @@ class FactureController extends Security
                         }
         
                         if(!$this->hasError()) {
-                            $facture = new Facture($data);
-                            $em = new EntityManager;
-                            $em->add($facture);
+                            $em = (new EntityManager)->add("facture", array_merge($data, [
+                                "code" => random_int(100000, 9999999),
+                                "slug" => $this->createSlug(),
+                                "dat" => date("Y-m-d H:i:s")
+                            ]));
 
                             $this->setShowNotification(true);
                             $this->setNotificationColor('bg-success');

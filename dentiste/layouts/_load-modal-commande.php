@@ -1,16 +1,18 @@
-
+<?php
+    $db = $router->getDb();
+?>
 <div class="accordion" id="accordionExample">
 <?php foreach ($commandes as $key => $commande): ?>
 
     <div class="card border-0">
 
-        <div class="card-header" id="heading<?= $commande->getId(); ?>">
+        <div class="card-header" id="heading<?= $commande["id"]; ?>">
             <h5 class="mb-0">
-                <button class="btn btn-block btn-link word-break" type="button" data-toggle="collapse" data-target="#collapse<?= $commande->getId(); ?>" aria-expanded="false" aria-controls="collapse<?= $commande->getId(); ?>">CO-<?= strtoupper($commande->getSlug()); ?></button>
+                <button class="btn btn-block btn-link word-break" type="button" data-toggle="collapse" data-target="#collapse<?= $commande["id"]; ?>" aria-expanded="false" aria-controls="collapse<?= $commande["id"]; ?>">CO-<?= strtoupper($commande["id"]); ?></button>
             </h5>
         </div>
 
-        <div id="collapse<?= $commande->getId(); ?>" class="collapse" aria-labelledby="heading<?= $commande->getId(); ?>" data-parent="#accordionExample">
+        <div id="collapse<?= $commande["id"]; ?>" class="collapse" aria-labelledby="heading<?= $commande["id"]; ?>" data-parent="#accordionExample">
 
     <!-- Begin Main -->
     <div class="w-100 border-bottom pt-3">
@@ -57,13 +59,13 @@
             </div>
         </div>
 
-        <?php if($clink == 1 && $commande->getValide() == 0): ?>
+        <?php if($clink == 1 && $commande["valide"] == 0): ?>
 
             <form method="post" action="" name="" class="" onsubmit="console.log(this);//window.event.preventDefault();console.log(this)">
                 <div class="text-center">
                     <button type="butto" class="btn px-4 bg-ederalab text-white border-0 shadow-none" style="border-radius:.5rem;">Accepter la commande</button>
                 </div>
-                <input type="hidden" name="accept_cmd[commande]" value="<?= $commande->getId(); ?>"/>
+                <input type="hidden" name="accept_cmd[commande]" value="<?= $commande["id"]; ?>"/>
                 <input type="hidden" name="csrf" value="<?= password_hash('accept-command', 1); ?>">
             </form>
 

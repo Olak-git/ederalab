@@ -1,6 +1,5 @@
 <?php
 
-use src\Repository\ProtheseRepository;
 use src\Router\Router;
 
 require_once '../autoload.php';
@@ -11,7 +10,10 @@ $router->dentisteIsConnected();
 
 $router->request();
 
-$protheses = (new ProtheseRepository)->findAll();
+$db = $router->getDb();
+$user = $router->getDentiste();
+
+$protheses = $db->findAll("prothese");
 
 $header_link = 2;
 
@@ -122,7 +124,7 @@ ob_start();
                             <div class="col col-auto pr-0" style="min-width:100px;">
                                 <select class="custom-select shadow-none" id="modal_cas_prothese" required>
                                     <?php foreach($protheses as $prot): ?>
-                                        <option data-details="<?= $prot->getDetail(); ?>" value="<?= $prot->getId(); ?>"><?= $prot->getNumero(); ?></option>
+                                        <option data-details="<?= $prot["detail"]; ?>" value="<?= $prot["id"]; ?>"><?= $prot["numero"]; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -132,7 +134,7 @@ ob_start();
                         <div class="d-flex flex-wrap">
                             <div class="col col-auto p-0 mr-2"><label for="modal_details_cmd" class="mb-0">Détails de la commande</label></div>
                             <div class="col px-0">
-                                <textarea rows="3" class="form-control shadow-none line-height-normal" id="modal_details_cmd" readonly><?= count($protheses) !== 0 ? $protheses[0]->getDetail() : '' ?></textarea>
+                                <textarea rows="3" class="form-control shadow-none line-height-normal" id="modal_details_cmd" readonly><?= count($protheses) !== 0 ? $protheses[0]["detail"] : '' ?></textarea>
                             </div>
                         </div>
                     </div>
@@ -173,7 +175,7 @@ ob_start();
                 <div class="form-group mb-" id="nom_dentiste">
                     <div class="d-flex align-items-end">
                         <div class="col col-auto p-0"><label for="add_commande_nom_dentiste" class="mb-0">Nom & prénom du dentiste</label></div>
-                        <div class="col"><input type="text" name="add_commande[nom_dentiste]" class="form-control form-style rounded-pill shadow-none" id="add_commande_nom_dentiste" placeholder="Username" value="<?= $router->getValPost(['add_commande', 'nom_dentiste']) == '' ? $router->getDentiste()->getUsername() : $router->getValPost(['add_commande', 'nom_dentiste']); ?>"></div>
+                        <div class="col"><input type="text" name="add_commande[nom_dentiste]" class="form-control form-style rounded-pill shadow-none" id="add_commande_nom_dentiste" placeholder="Username" value="<?= $router->getValPost(['add_commande', 'nom_dentiste']) == '' ? $router->getUsername($user["nom"], $user["prenom"]) : $router->getValPost(['add_commande', 'nom_dentiste']); ?>"></div>
                     </div>
                     <?= $router->errorHTML2('nom_dentiste'); ?>
                 </div>
@@ -181,7 +183,7 @@ ob_start();
                 <div class="form-group mb-" id="cabinet">
                     <div class="d-flex align-items-end">
                         <div class="col col-auto p-0"><label for="add_commande_cabinet" class="mb-0">Cabinet</label></div>
-                        <div class="col"><input type="text" name="add_commande[cabinet]" class="form-control form-style rounded-pill shadow-none" id="add_commande_cabinet" placeholder="Username" value="<?= $router->getValPost(['add_commande', 'cabinet']) == '' ? $router->getDentiste()->getCabinet() : $router->getValPost(['add_commande', 'cabinet']); ?>"></div>
+                        <div class="col"><input type="text" name="add_commande[cabinet]" class="form-control form-style rounded-pill shadow-none" id="add_commande_cabinet" placeholder="Username" value="<?= $router->getValPost(['add_commande', 'cabinet']) == '' ? $user["cabinet"] : $router->getValPost(['add_commande', 'cabinet']); ?>"></div>
                     </div>
                     <?= $router->errorHTML2('cabinet'); ?>
                 </div>
@@ -284,7 +286,7 @@ ob_start();
                     <div class="col-12 col-md-6 col-lg-4 mb-2 px-0">
                         <div class="form-group">
                             <label for="">Date d'envoi de la commande</label>
-                            <span class="form-control date-style flex-center rounded-pill text-muted"><?= (new DateTime('now'))->format('d/m/Y'); ?></span>
+                            <span class="form-control date-style flex-center rounded-pill text-muted"><?= (new \DateTime('now'))->format('d/m/Y'); ?></span>
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-lg-4 mb-2 px-0">

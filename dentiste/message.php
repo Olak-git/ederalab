@@ -1,8 +1,5 @@
 <?php
 
-use src\Repository\DentisteRepository;
-use src\Repository\DiscussionRepository;
-use src\Repository\TransporteurRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -13,41 +10,15 @@ $router->dentisteIsConnected();
 
 $router->request();
 
+$db = $router->getDb();
 $dentiste = $router->getDentiste();
-
-$discussionRepository = new DiscussionRepository;
-$dentisteRepository = new DentisteRepository;
-$transporteurRepository = new TransporteurRepository;
 
 $receveurs = [];
 $messages = [];
 
-// if(isset($_GET['user'])) {
-//     $user = strtolower($_GET['user']);
-//     if($user == 'dentiste') {
-//         $receveurs = $dentisteRepository->findAll();
-//     } elseif($user == 'transporteur') {
-//         $receveurs = $transporteurRepository->findAll();
-//     }
-// }
-
-// if(isset($_GET['dest']) && isset($user)) {
-//     if($user == 'dentiste') {
-//         $dest = $dentisteRepository->findOneBy(['slug' => $_GET['dest']]);
-//     } elseif($user == 'transporteur') {
-//         $dest = $transporteurRepository->findOneBy(['slug' => $_GET['dest']]);
-//     }
-//     if(isset($dest) && null !== $dest) {
-//         $discussion = $discussionRepository->findOneBy(['compte_receveur' => $user, 'receveur' => $dest->getId()]);
-//         if($discussion) {
-//             $messages = $discussion->getMessages();
-//         }
-//     }
-// }
-
-$discussion = $discussionRepository->findOneBy(['compte_receveur' => 'dentiste', 'receveur' => $dentiste->getId()]);
+$discussion = $db->findOneBy("discussion", ['compte_receveur' => 'dentiste', 'receveur' => $dentiste["id"]]);
 if($discussion) {
-    $messages = $discussion->getMessages();
+    $messages = $db->findBy("message", ['discussion' => $discussion["id"]]);
 }
 
 $account = 'dentiste';
@@ -153,7 +124,7 @@ $header_link = 3;
                     clearInterval(timeInter);
                     timeInter = null;
                 }                
-            }, 1000);
+            }, 30000);
     </script>
 <?php
     $script = ob_get_clean();

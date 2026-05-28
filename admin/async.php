@@ -1,8 +1,5 @@
 <?php
 
-use src\Repository\CommandeRepository;
-use src\Repository\DentisteRepository;
-use src\Repository\TransporteurRepository;
 use src\Router\Router;
 
 require_once '../autoload.php';
@@ -10,6 +7,8 @@ require_once '../autoload.php';
 $router = new Router;
 
 $router->request();
+
+$db = $router->getDb();
 
 if(isset($_POST['async'])) {
 
@@ -27,13 +26,45 @@ if(isset($_POST['async'])) {
 
         if($calendrier == 'cmd_recue') {
             $clink = 1;
-            $commandes = (new CommandeRepository)->findCalendarCommandReceive($_POST['date']);
+            $request = $db->query(
+                "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste, d.cabinet cabinet_dentiste, d.adresse adresse_dentiste
+                FROM commande c
+                INNER JOIN dentiste d
+                ON c.dentiste = d.id
+                WHERE c.date_envoie = :dat 
+                AND c.archive = 0 
+                AND c.valide != -1 
+                AND c.livraison != 2", ["dat" => $_POST['date']]
+            );
+            $commandes = $request->fetchAll();
+            $request->closeCursor();
         } elseif($calendrier == 'cmd_livree') {
             $clink = 2;
-            $commandes = (new CommandeRepository)->findBy(['date_envoie' => $_POST['date'], 'livraison' => 2]);
+            $request = $db->query(
+                "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste, d.cabinet cabinet_dentiste, d.adresse adresse_dentiste
+                FROM commande c
+                INNER JOIN dentiste d
+                ON c.dentiste = d.id 
+                WHERE date_envoie = :dat 
+                AND livraison = 2", ["dat" => $_POST['date']]
+            );
+            $commandes = $request->fetchAll();
+            $request->closeCursor();
         } elseif($calendrier == 'reception_fournisseur') {
             $clink = 3;
-            $commandes = (new CommandeRepository)->getCommandeByTransReceptionDate($_POST['date']);
+            $request = $db->query(
+                "SELECT DISTINCT(c.id), c.*, d.nom nom_dentiste, d.prenom prenom_dentiste, d.cabinet cabinet_dentiste, d.adresse adresse_dentiste, t.mom nom_transporteur, t.prenom prenom_transporteur
+                FROM commande c
+                INNER JOIN dentiste d
+                ON c.dentiste = d.id
+                INNER JOIN choix_transporteur ct 
+                ON ct.commande = c.id 
+                INNER JOIN transporteur t 
+                ON ct.transporteur = t.id 
+                WHERE Date(ct.date_reception)=:dat", ['dat' => $_POST['date']]
+            );
+            $commandes = $request->fetchAll();
+            $request->closeCursor();
         }
 
         if(isset($commandes)) {
@@ -46,16 +77,54 @@ if(isset($_POST['async'])) {
         
         if($suivi == 'cmd_recue') {
             $code = 1;
-            $commandes = (new CommandeRepository)->findCommandeRecue();
+            $request = $db->query(
+                "SELECT c.*, d.slug slug_dentiste, d.nom nom_dentiste, d.prenom prenom_dentiste, d.cabinet cabinet_dentiste, d.adresse adresse_dentiste
+                FROM commande c
+                INNER JOIN dentiste d
+                ON c.dentiste = d.id
+                WHERE c.archive = 0 
+                AND c.archive = 0"
+            );
+            $commandes = $request->fetchAll();
+            $request->closeCursor();
         } elseif($suivi == 'cmd_livree') {
             $code = 2;
-            $commandes = (new CommandeRepository)->findCommandeLivree();
+            $request = $db->query(
+                "SELECT c.*, d.slug slug_dentiste, d.nom nom_dentiste, d.prenom prenom_dentiste, d.cabinet cabinet_dentiste, d.adresse adresse_dentiste
+                FROM commande c
+                INNER JOIN dentiste d
+                ON c.dentiste = d.id 
+                WHERE c.archive = 0
+                AND c.valide = 1  
+                AND c.livraison = 2"
+            );
+            $commandes = $request->fetchAll();
+            $request->closeCursor();
         } elseif($suivi == 'cmd_attente') {
             $code = 3;
-            $commandes = (new CommandeRepository)->findCommandeEnAttente();
+            $request = $db->query(
+                "SELECT c.*, d.slug slug_dentiste, d.nom nom_dentiste, d.prenom prenom_dentiste, d.cabinet cabinet_dentiste, d.adresse adresse_dentiste
+                FROM commande c
+                INNER JOIN dentiste d
+                ON c.dentiste = d.id 
+                WHERE c.archive = 0 
+                AND c.valide = 1
+                AND c.livraison = 0"
+            );
+            $commandes = $request->fetchAll();
+            $request->closeCursor();
         } elseif($suivi == 'cmd_annulee') {
             $code = 4;
-            $commandes = (new CommandeRepository)->findCommandeAnnulee();
+            $request = $db->query(
+                "SELECT c.*, d.slug slug_dentiste, d.nom nom_dentiste, d.prenom prenom_dentiste, d.cabinet cabinet_dentiste, d.adresse adresse_dentiste
+                FROM commande c
+                INNER JOIN dentiste d
+                ON c.dentiste = d.id 
+                WHERE c.archive = 0 
+                AND c.valide = -1"
+            );
+            $commandes = $request->fetchAll();
+            $request->closeCursor();
         }
 
         if(isset($commandes)) {
@@ -66,10 +135,10 @@ if(isset($_POST['async'])) {
     // if(isset($_POST['commande'])) {
     //     $cmd = $_POST['commande'];
     //     if($cmd == 'recue' && isset($_POST['date_envoie'])) {
-    //         $commandes = (new CommandeRepository)->findBy(['date_envoie' => $_POST['date_envoie']]);
+    //         $commandes = $db->findBy("commande", ['date_envoie' => $_POST['date_envoie']]);
     //         include 'layouts/calendrier-planification/_load-modal-commande-recue.php';
     //     } elseif($cmd == 'livree') {
-    //         $commandes = (new CommandeRepository)->findBy(['date_envoie' => $_POST['date_envoie'], 'livraison' => 2]);
+    //         $commandes = $db->findBy("commande", ['date_envoie' => $_POST['date_envoie'], 'livraison' => 2]);
     //         include 'layouts/calendrier-planification/_load-modal-commande-livree.php';
     //     }
     // }
@@ -88,7 +157,7 @@ if(isset($_POST['async'])) {
             echo json_encode(['xhkerrors' => $router->getError()]);
         } else {
             if($router->get_messages()) {
-                $message = $router->get_messages()[0];
+                $message = $router->get_messages();
                 include('../layouts/message/_message-right.php');
             } else {
                 echo json_encode(true);
@@ -101,7 +170,7 @@ if(isset($_POST['async'])) {
         if(!empty($router->get_messages())) {
             $messages = $router->get_messages();
             foreach($messages as $message):
-                if($message->getExpediteur() === 'admin') {
+                if($message["expediteur"] === 'admin') {
                     include('../layouts/message/_message-right.php');
                 } else {
                     include('../layouts/message/_message-left.php');
@@ -113,16 +182,14 @@ if(isset($_POST['async'])) {
     elseif(isset($_POST['upd_conversation'])) {
         $updc = $_POST['upd_conversation'];
         if(isset($updc['user'])) {
-            $dentisteRepository = new DentisteRepository;
-            $transporteurRepository = new TransporteurRepository;
             
             $receveurs = [];
 
             $user = strtolower($updc['user']);
             if($user == 'dentiste') {
-                $receveurs = $dentisteRepository->findAll();
+                $receveurs = $db->findAll("dentiste");
             } elseif($user == 'transporteur') {
-                $receveurs = $transporteurRepository->findAll();
+                $receveurs = $db->findAll("transporteur");
             }
 
             if(isset($updc['user_active'])) {

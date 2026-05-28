@@ -1,6 +1,5 @@
 <?php
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 
 require_once '../autoload.php';

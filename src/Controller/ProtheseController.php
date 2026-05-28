@@ -1,15 +1,21 @@
 <?php
 namespace src\Controller;
 
-use src\Entity\Prothese;
+use src\Vendor\DB;
+use src\traits\Properties;
 use src\Vendor\Security;
 use src\Vendor\EntityManager;
 
 class ProtheseController extends Security
 {
+    use Properties;
+
+    private $db;
+
     public function __construct()
     {
         parent::__construct();
+        $this->db = new DB;
     }
 
     public function isBlank($form, $key, $index)
@@ -48,9 +54,8 @@ class ProtheseController extends Security
                     $data['detail'] = trim($form['detail']);
                 }
                 if(!$this->hasError()) {
-                    $em = new EntityManager;
-                    $prothese = new Prothese($data);
-                    $em->add($prothese);
+                    $data['slug'] = $this->createSlug();
+                    (new EntityManager)->add("prothese", $data);
     
                     $this->setShowNotification(true);
                     $this->setNotificationColor('bg-success');

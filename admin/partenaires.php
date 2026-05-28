@@ -2,7 +2,6 @@
 // name: partenaires
 // route: partenaires
 
-use src\Repository\TransporteurRepository;
 use src\Router\Router;
 
 require '../autoload.php';
@@ -13,7 +12,15 @@ $router->adminIsConnected();
 
 $router->request();
 
-$transporteurs = (new TransporteurRepository)->findBy(['del' => 0]);
+$db = $router->getDb();
+
+$transporteurs = $db->query(
+    "SELECT tr.*, ide.code plain_code
+    FROM transporteur tr
+    LEFT JOIN identifiant ide
+    ON tr.id = ide.transporteur
+    WHERE tr.del = 0"
+)->fetchAll(); // $db->findBy("transporteur", ['del' => 0]);
 
 $alink = 6;
 
@@ -39,10 +46,10 @@ $alink = 6;
             <div class="d-flex justify-content-center mb-3">
                 <div class="col-12 col-sm-11">
                     <div class="d-flex justify-content-between align-items-center bg-white p-1" style="border:1px solid silver;border-radius:1rem;min-height:60px;">
-                        <a href="#" type="button" class="showTransProfil text-dark text-decoration-none" data-toggle="modal" data-target="#profilTranspModal"  data-id="<?= $trans->getSlug(); ?>" data-username="<?= $trans->getUsername(); ?>" data-address="<?= $trans->getAdresse(); ?>" data-phone="<?= $trans->getPhone(); ?>" class="text-decoration-none text-dark" style="width:calc(100% - 30px);">
+                        <a href="#" type="button" class="showTransProfil text-dark text-decoration-none" data-toggle="modal" data-target="#profilTranspModal"  data-id="<?= $trans["slug"]; ?>" data-username="<?= $router->getUsername($trans["nom"], $trans["prenom"]); ?>" data-address="<?= $trans["adresse"]; ?>" data-phone="<?= $trans["phone"]; ?>" class="text-decoration-none text-dark" style="width:calc(100% - 30px);">
                             <div class="word-break d-flex flex-wrap w-100">
-                                <div class="col-12 col-sm-6 col-md-8"><?= $trans->getUsername(); ?>, <?= $trans->getAdresse(); ?></div>
-                                <div class="col-12 col-sm-6 col-md-4"><?= $trans->getPhone(); ?></div>
+                                <div class="col-12 col-sm-6 col-md-8"><?= $router->getUsername($trans["nom"], $trans["prenom"]); ?>, <?= $trans["adresse"]; ?></div>
+                                <div class="col-12 col-sm-6 col-md-4"><?= $trans["phone"]; ?></div>
                             </div>
                         </a>
                         <div class="text-right px-0" style="width:30px;">
@@ -52,18 +59,18 @@ $alink = 6;
                                 </svg></a>
 
                                 <div class="dropdown-menu border-0 bg-ederalab">
-                                    <a href="<?= $router->getRoutes()->path('commandes'); ?>" class="btn btn-block text-white small text-left callUpdateModal" 
+                                    <a href="" class="btn btn-block text-white small text-left callUpdateModal" 
                                         data-toggle="modal" 
                                         data-target="#editTranspModal" 
-                                        data-code="<?= $trans->getCodePlain(); ?>" 
-                                        data-id="<?= $trans->getId(); ?>" 
-                                        data-username="<?= $trans->getUsername(); ?>" 
-                                        data-address="<?= $trans->getAdresse(); ?>" 
-                                        data-phone="<?= $trans->getPhone(); ?>" 
+                                        data-code="<?= $trans["plain_code"]; ?>" 
+                                        data-id="<?= $trans["id"]; ?>" 
+                                        data-username="<?= $router->getUsername($trans["nom"], $trans["prenom"]); ?>" 
+                                        data-address="<?= $trans["adresse"]; ?>" 
+                                        data-phone="<?= $trans["phone"]; ?>" 
                                         style="border-bottom:1px solid #fff;padding: .25rem .5rem !important;">Modifier</a>
                                     <form method="post" class="my-0">
                                         <button class="btn btn-block text-white small text-left text-decoration-none mt-1 bg-ederalab border-0" style="padding: .25rem .5rem !important;cursor:pointer;">Supprimer</button>
-                                        <input type="hidden" name="del_transporteur[id]" value="<?= $trans->getId(); ?>"/>
+                                        <input type="hidden" name="del_transporteur[id]" value="<?= $trans["id"]; ?>"/>
                                         <input type="hidden" name="csrf" value="<?= password_hash('del-transporter', 1); ?>">
                                     </form>
                                 </div>

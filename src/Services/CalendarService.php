@@ -1,12 +1,8 @@
 <?php
 namespace src\Services;
 
-use src\traits\Hydrate;
-
 class CalendarService
 {
-    use Hydrate;
-
     /**
      * @var string
      */
@@ -25,7 +21,8 @@ class CalendarService
     public function __construct(string $year, string $month)
     {
         $year = (int)$year < 1960 ? '1960' : $year;
-        $this->hydrate(['year' => $year, 'month' => $month]);
+        $this->year = $year;
+        $this->month = $month;
         $this->weeks = [];
         $this->setWeeks();
     }

@@ -2,7 +2,6 @@
 // name: gestion_commandes_recues
 // route: gestion-commandes-recues
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -11,9 +10,16 @@ $router = new Router;
 
 $router->adminIsConnected();
 
-$commandeRepository = new CommandeRepository;
+$db = $router->getDb();
 
-$commandes = $commandeRepository->findCommandeRecue();
+$commandes = $db->query(
+    "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste 
+    FROM commande c
+    INNER JOIN dentiste d 
+    ON c.dentiste = d.id
+    WHERE c.archive = 0 
+    AND c.valide = 0"
+)->fetchAll();
 
 $alink = 2;
 $code = 1;
@@ -43,9 +49,9 @@ $code = 1;
                     data-name-value="cmd_recue" 
                     class="btn-block d-flex justify-content-between align-items-center bg-white p-2 rounded-fit text-dark text-decoration-none show-modal-commande border border-ederalab" style="min-height:50px;">
                     <div class="" style="max-width:80%;">
-                        <?= $commande->getDentiste()->getUsername(); ?>, <?= $commande->getUsernamePatient(); ?>
+                        <?= $router->getUsername($commande["nom_dentiste"], $commande["prenom_dentiste"]); ?>, <?= $router->getUsername($commande["nom_patient"], $commande["prenom_patient"]); ?>
                     </div>
-                    <span class="font-weight-bold"><?= (new \DateTime($commande->getDateEnvoie()))->format('d/m/Y'); ?></span>
+                    <span class="font-weight-bold"><?= (new \DateTime($commande["date_envoie"]))->format('d/m/Y'); ?></span>
                 </a>
             <?php endforeach; ?>
             

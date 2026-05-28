@@ -5,6 +5,7 @@ use src\Router\Router;
 
     $router = new Router;
 
+    $router->dentisteBack();
     $router->request();
 ?>
 

@@ -9,6 +9,8 @@ $router->dentisteIsConnected();
 
 $router->request();
 
+$user = $router->getDentiste();
+
 $param_link = 1;
 if(isset($_GET['params'])) {
     $param_link = $_GET['params'];
@@ -150,7 +152,7 @@ if(isset($_GET['params'])) {
                             <a href="parametres.php?params=3" class="params-link <?= isset($param_link) && $param_link == 3 ? 'active' : '' ?> text-decoration-none">Mot de passe</a>
                             <a href="message.php" class="params-link text-decoration-none">Messagerie</a>
                             <a href="a-savoir.php" class="params-link text-decoration-none">A propos</a>
-                            <a href="signout.php" class="params-link text-decoration-none">Déconnexion</a>
+                            <a href="logout.php" class="params-link text-decoration-none">Déconnexion</a>
                         </div>
                     </div>
 
@@ -184,7 +186,7 @@ if(isset($_GET['params'])) {
 
                             <div class="d-flex justify-content-center align-items-center mb-2">
                                 <span class="position-relative zhg-image">
-                                    <img src="<?= $router->getAvatar($router->getDentiste()->getImage()); ?>" alt="" class="mw-100 mh-100" />
+                                    <img src="<?= $router->getAvatar($user["image"]??null); ?>" alt="" class="mw-100 mh-100" />
                                     <a href="#" type="button" class="btn-primary d-flex justify-content-center align-items-center" style="position:absolute;bottom:0px;right:0;width:35px;height:35px;border-radius:50%;overflow:hidden;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-camera-fill" viewBox="0 0 16 16" style="width:40%;height:40%;">
                                             <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
@@ -199,35 +201,35 @@ if(isset($_GET['params'])) {
                                 <div class="form-group mb-" id="nom">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_dentiste_nom" class="">Nom</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_dentiste[nom]" class="form-control rounded-pill shadow-none" id="compte_dentiste_nom" placeholder="Nom" value="<?= $router->getValPost(['upd_compte_dentiste', 'nom']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'nom']) : $router->getDentiste()->getNom(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_dentiste[nom]" class="form-control rounded-pill shadow-none" id="compte_dentiste_nom" placeholder="Nom" value="<?= $router->getValPost(['upd_compte_dentiste', 'nom']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'nom']) : $user["nom"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('nom'); ?>
                                 </div>
                                 <div class="form-group mb-" id="prenom">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_dentiste_prenom" class="">Prénom</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_dentiste[prenom]" class="form-control rounded-pill shadow-none" id="compte_dentiste_prenom" placeholder="Prénom" value="<?= $router->getValPost(['upd_compte_dentiste', 'prenom']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'prenom']) : $router->getDentiste()->getPrenom(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_dentiste[prenom]" class="form-control rounded-pill shadow-none" id="compte_dentiste_prenom" placeholder="Prénom" value="<?= $router->getValPost(['upd_compte_dentiste', 'prenom']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'prenom']) : $user["prenom"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('prenom'); ?>
                                 </div>
                                 <div class="form-group mb-" id="cabinet">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_dentiste_cabinet" class="">Cabinet</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_dentiste[cabinet]" class="form-control rounded-pill shadow-none" id="compte_dentiste_cabinet" placeholder="Cabinet" value="<?= $router->getValPost(['upd_compte_dentiste', 'cabinet']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'cabinet']) : $router->getDentiste()->getCabinet(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_dentiste[cabinet]" class="form-control rounded-pill shadow-none" id="compte_dentiste_cabinet" placeholder="Cabinet" value="<?= $router->getValPost(['upd_compte_dentiste', 'cabinet']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'cabinet']) : $user["cabinet"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('cabinet'); ?>
                                 </div>
                                 <div class="form-group mb-" id="adresse">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_dentiste_adresse" class="">Ville/Adresse</label><span class="">:</span></div>
-                                        <div class="col"><input type="text" name="upd_compte_dentiste[adresse]" class="form-control rounded-pill shadow-none" id="compte_dentiste_adresse" placeholder="" value="<?= $router->getValPost(['upd_compte_dentiste', 'adresse']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'adresse']) : $router->getDentiste()->getAdresse(); ?>"></div>
+                                        <div class="col"><input type="text" name="upd_compte_dentiste[adresse]" class="form-control rounded-pill shadow-none" id="compte_dentiste_adresse" placeholder="" value="<?= $router->getValPost(['upd_compte_dentiste', 'adresse']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'adresse']) : $user["adresse"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('adresse'); ?>
                                 </div>
                                 <div class="form-group mb-" id="email">
                                     <div class="d-flex align-items-center">
                                         <div class="col-4 p-0 d-flex justify-content-between align-items-center text-ederalab"><label for="compte_dentiste_email" class="">Adresse e-mail</label><span class="">:</span></div>
-                                        <div class="col"><input type="email" name="upd_compte_dentiste[email]" class="form-control rounded-pill shadow-none" id="compte_dentiste_email" placeholder="e-mail" value="<?= $router->getValPost(['upd_compte_dentiste', 'email']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'email']) : $router->getDentiste()->getEmail(); ?>"></div>
+                                        <div class="col"><input type="email" name="upd_compte_dentiste[email]" class="form-control rounded-pill shadow-none" id="compte_dentiste_email" placeholder="e-mail" value="<?= $router->getValPost(['upd_compte_dentiste', 'email']) !== '' ? $router->getValPost(['upd_compte_dentiste', 'email']) : $user["email"]; ?>"></div>
                                     </div>
                                     <?= $router->errorHTML2('email'); ?>
                                 </div>

@@ -1,14 +1,11 @@
 <?php
 namespace src\Vendor;
 
-use Exception;
-use ReflectionClass;
-use src\traits\Meithods;
-
 class EntityManager
 {
-    use Meithods;
-
+    /**
+     * @var \src\Vendor\DB
+     */
     private $db;
 
     public function __construct()
@@ -16,151 +13,142 @@ class EntityManager
         $this->db = new DB;
     }
 
-    public function getTable()
+    /**
+     * @param string $table
+     * @param array $data
+     */
+    public function add($table, $data)
     {
-        $fr = new \ReflectionClass($this);
-        $table = str_replace(['src/Entity/', 'src/Repository/', 'Repository'], '', str_replace('\\', '/', $fr->getName()));
-        return $table;
-    }
-
-    public function add(EntityInterface $o)
-    {
-        $fr = new \ReflectionClass($o);
-        $table = $this->formatage(str_replace('src/Entity/', '', str_replace('\\', '/', $fr->getName())));
-        $properties = $fr->getProperties();
-        $length = count($properties);
-        $params = [];
-        $sql = 'INSERT INTO ' . $table . '(';
-        $values = '';
-        foreach($properties as $i => $property):
-            if(strtolower($property->getName()) !== 'id'):
-                $sql .= $property->getName() . '';
-                $values .= ':' . $property->getName();
-                if($i < $length - 1) {
-                    $sql .= ', ';
-                    $values .= ', ';
-                }
-                $method = 'get' . ucfirst(str_replace('_', '', $property->getName()));
-                if(method_exists($o, $method)) {
-                    if(strtolower($property->getName()) === 'dat') {
-                        $o->setDat(date('Y-m-d H:i:s'));
-                    }
-                    $params[$property->getName()] = strtolower($property->getName()) === 'password' ? password_hash($o->$method(), 1) : (is_object($o->$method()) ? $o->$method()->getId() : $o->$method());
-                }
-            endif;
+        $sql = "INSERT INTO $table (";
+        $index = "";
+        $keys = array_keys($data);
+        $L = count($keys);
+        foreach($keys as $i => $key):
+            $sql.=$key;
+            $index.=":$key";
+            if($i<$L-1) {
+                $sql.=",";
+                $index.=",";
+            }
         endforeach;
 
-        $sql = rtrim($sql, ', ');
-        $values = rtrim($values, ', ');
+        $sql.=") VALUES ($index)";
 
-        $sql .= ') VALUES (' . $values . ')';
-        $req = $this->db->getDb()->prepare($sql);
-
-        try{
-            $req->execute($params);
-            $o->setId($this->db->getDb()->lastInsertId());
-        } catch(Exception $e) {
-            die($e->getMessage());
-        }
-        $req->closeCursor();
+        $query = $this->db->query($sql, $data);
+        // $query->closeCursor();
+        return $this->db->getDb()->lastInsertId();
     }
 
-    public function update(EntityInterface $o)
+    /**
+     * @param string $table
+     * @param array $data
+     */
+    public function addMultiple($table, $data)
     {
-        $fr = new \ReflectionClass($o);
-        $table = $this->formatage(str_replace('src/Entity/', '', str_replace('\\', '/', $fr->getName())));
-        // if(strtolower($table) === 'genrezik') {
-        //     $table = 'genre_zik';
-        // }
-        // if(strtolower($table) === 'preferenceartiste') {
-        //     $table = 'preference_artiste';
-        // }
-        $properties = $fr->getProperties();
-        $length = count($properties) - 1;
-        $params = [];
-        $sql = 'UPDATE ' . $table . ' SET ';
-        foreach($properties as $i => $property):
-            if(strtolower($property->getName()) !== 'password'):
-                $sql .= $property->getName() . '=:' . $property->getName();
-                if($i < $length) {
-                    $sql .= ', ';
-                }
-                $method = 'get' . ucfirst(str_replace('_', '', $property->getName()));
-                if(method_exists($o, $method) && 'password' !== strtolower($property->getName())) {
-                    // if(strtolower($property->getName()) === 'dat') {
-                    //     $o->setDat(date('Y-m-d H:i:s'));
-                    // }
-                    $params[$property->getName()] = strtolower($property->getName()) === 'password' ? password_hash($o->$method(), 1) : (is_object($o->$method()) ? $o->$method()->getId() : $o->$method());
-                }
-            endif;
+        $sql = "INSERT INTO $table (";
+        $index = "";
+        $keys = array_keys($data);
+        $L = count($keys);
+        foreach($keys as $i => $key):
+            $sql.=$key;
+            $index.=":$key";
+            if($i<$L-1) {
+                $sql.=",";
+                $index.=",";
+            }
         endforeach;
 
-        // $sql = trim($sql);
-        // if(preg_match('#.+,$#', $sql)) {
-        //     $sql = substr($sql, 0, (strlen($sql) - 1));
-        // }
+        $sql.=") VALUES ($index)";
 
-        $sql = rtrim($sql, ', ');
-        $sql .= ' WHERE id = :id';
-
-        $req = $this->db->getDb()->prepare($sql);
-
-        try{
-            $req->execute($params);    
-        } catch(Exception $e) {
-            die($e->getMessage());
-        }
-        $req->closeCursor();
+        $this->db->query($sql, $data);
     }
 
-    public function updatePassword(EntityInterface $o)
+    /**
+     * @param string $table
+     * @param array $data
+     * @param mixed<array,int> $filter (format: [["id", "=", 2], ["age", ">=", 12], ...])
+     */
+    public function update($table, $data, $filter)
     {
-        $fr = new \ReflectionClass($o);
-        $table = $this->formatage(str_replace('src/Entity/', '', str_replace('\\', '/', $fr->getName())));
-        // if(strtolower($table) === 'genrezik') {
-        //     $table = 'genre_zik';
-        // }
-        // if(strtolower($table) === 'preferenceartiste') {
-        //     $table = 'preference_artiste';
-        // }
-        $sql = 'UPDATE ' . $table . ' SET password=:password WHERE id=:id';
-        $params = ['password' => password_hash($o->getPassword(), 1), 'id' => $o->getId()];
-        $req = $this->db->getDb()->prepare($sql);
-        
-        try{
-            $req->execute($params);
-        } catch(Exception $e) {
-            die($e->getMessage());
+        if(empty($data)) {
+            return $this;
         }
-        $req->closeCursor();
+        $sql = "UPDATE $table SET ";
+        $keys = array_keys($data);
+        $L = count($keys);
+        foreach($keys as $i => $key):
+            $sql.="{$key}=:{$key}";
+            if($i<$L-1) {
+                $sql.=",";
+            }
+        endforeach;
+
+        $conditions = "";
+        if(is_array($filter)) {
+            $L = count($filter);
+            foreach($filter as $i => $array):
+                $key = $array[0];
+                $k = $key;
+                $operator = $array[1];
+                $value = $array[2];
+                if(array_key_exists($key, $data)) {
+                    $k = "{$key}{$i}";
+                }
+                $conditions.="{$key} {$operator} :{$k}";
+                if($i<$L-1) {
+                    $conditions.=" AND ";
+                }
+                $data[$k] = $value;
+            endforeach;
+        } else {
+            $conditions = "id=:idx";
+            $data["idx"] = $filter;
+        }
+
+        if(!empty($conditions)) {
+            $sql.=" WHERE $conditions";
+        }
+
+        $this->db->query($sql, $data);
     }
 
-    public function remove(EntityInterface $o)
+    /**
+     * @param string $table
+     * @param mixed<array,int> $filter (format: [["id", "=", 2], ["age", ">=", 12], ...])
+     */
+    public function delete($table, $filter)
     {
-        $fr = new \ReflectionClass($o);
-        $table = $this->formatage(str_replace('src/Entity/', '', str_replace('\\', '/', $fr->getName())));
-        // if(strtolower($table) === 'genrezik') {
-        //     $table = 'genre_zik';
-        // }
-        // if(strtolower($table) === 'preferenceartiste') {
-        //     $table = 'preference_artiste';
-        // }
-        $sql = 'DELETE FROM ' . $table . ' WHERE id = :id';
-        $req = $this->db->getDb()->prepare($sql);
-        $method = 'getId';
-        if(method_exists($o, $method)) {
-            $req->execute(['id' => $o->$method()]);
+        $sql = "DELETE FROM $table";
+        $conditions = "";
+        $params = [];
+        if(is_array($filter)) {
+            $L = count($filter);
+            foreach($filter as $i => $array):
+                $key = $array[0];
+                $operator = $array[1];
+                $value = $array[2];
+
+                $conditions.="{$key} {$operator} :{$key}";
+                if($i<$L-1) {
+                    $conditions.=" AND ";
+                }
+                $params[$key] = $value;
+            endforeach;
+        } else {
+            $conditions = "id=:id";
+            $params["id"] = $filter;
         }
-        $req->closeCursor();
+
+        if(!empty($conditions)) {
+            $sql.=" WHERE $conditions";
+        }
+
+        $this->db->query($sql, $params);
     }
 
-    public function removeAll(array $s)
-    {
-        foreach ($s as $key => $o) {
-            $this->remove($o);
-        }
-    }
-
+    /**
+     * @param string $table
+     */
     public function count($table)
     {
         return $this->db->getDb()->query('SELECT id FROM ' . $table)->num_rows;

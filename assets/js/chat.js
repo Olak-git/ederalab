@@ -141,7 +141,7 @@ const beginSync = function () {
         if(document.forms.chat) {
             synchro()
         }
-    }, 1000);
+    }, 30000);
 }
 const recall = function () {
     closeSync();
@@ -264,11 +264,12 @@ const closeReload = function () {
 }
 const beginReload = function () {
     timeReload = setTimeout(() => {
+        console.log("resync");
         if(Z('.conversation-liste')) {
             // Lancer le chargement
             reloadConversationList()
         }
-    }, 2000);
+    }, 30000);
 }
 const recallReload = function () {
     closeReload();

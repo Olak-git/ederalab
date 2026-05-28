@@ -1,17 +1,22 @@
 <?php
 namespace src\Controller;
 
-use src\Entity\Dentiste;
+use src\Vendor\DB;
 use src\Vendor\Security;
 use src\Services\FileService;
 use src\Vendor\EntityManager;
-use src\Repository\DentisteRepository;
+use src\traits\Properties;
 
 class DentisteController extends Security
 {
+    use Properties;
+
+    private $db;
+
     public function __construct()
     {
         parent::__construct();
+        $this->db = new DB;
     }
 
     public function isBlank($form, $key, $index)
@@ -43,10 +48,10 @@ class DentisteController extends Security
                 $this->addError('email', 'Adresse email non valide.');
                 return false;
             } else {
-                $user = (new DentisteRepository)->findOneBy(['email' => $email]);
+                $user = $this->db->findOneBy("dentiste", ['email' => $email]);
                 if(isset($_POST['upd_compte_dentiste'])) {
                     $user_connected = $this->getDentiste();
-                    if($user && $user_connected && strtolower($user->getEmail()) !== strtolower($user_connected->getEmail())) {
+                    if($user && $user_connected && strtolower($user["email"]) !== strtolower($user_connected["email"])) {
                         $this->addError('email', 'Un compte existe déjà avec cette adresse email. Veuillez en utiliser une autre.');
                     }
                 } else {
@@ -126,15 +131,16 @@ class DentisteController extends Security
         }
         if(!$this->isBlank($form, 'password', 'password')) {
             if($this->isValidatePassword($form['password'], $form['confirmation_password'])) {
-                $data['password'] = trim($form['password']);
+                $data['password'] = password_hash(trim($form['password']), 1);
             }
         }
         if(!$this->hasError()) {
-            $em = new EntityManager;
-            $dentiste = new Dentiste($data);
-            $em->add($dentiste);
-
-            return ['success' => true, 'user' => serialize($dentiste)];
+            $data['slug'] = $this->createSlug();
+            $data['dat'] = date('Y-m-d H:i:s');
+            $id = (new EntityManager)->add("dentiste", $data);
+            // $data["id"] = $id;
+            $user = $this->db->findOneBy("dentiste", ["id" => $id]);
+            return ['success' => true, 'user' => serialize($user)];
         }
         return ['success' => false];
     }
@@ -205,9 +211,8 @@ class DentisteController extends Security
                 }
 
                 if(!$this->hasError()) {
-                    $em = new EntityManager;
-                    $user->hydrate($data);
-                    $em->update($user);
+                    (new EntityManager)->update("dentiste", $data, $user["id"]);
+                    $user = array_merge($user, $data);
                     $_SESSION['dentiste'] = serialize($user);
     
                     $this->setShowNotification(true);
@@ -227,16 +232,14 @@ class DentisteController extends Security
                 $form = $post['upd_password_dentiste'];
 
                 if(!$this->isBlank($form, 'password', 'password')) {
-                    $password_hash = (new DentisteRepository)->findOneBy(['id' => $user->getId()])->getPassword();
+                    $password_hash = $this->db->findOneBy("dentiste", ['id' => $user["id"]])["password"];
                     if($this->isCsrfValidate($form['password'], $password_hash)) {
                         $new_password = $form['new_password'];
                         $confirmation_new_password = $form['confirmation_password'];
                         
                         if($this->isValidatePassword($new_password, $confirmation_new_password, 'new_password', 'confirmation')) {
                             if(!$this->hasError()) {
-                                $user->setPassword($new_password);
-                                $em = new EntityManager;
-                                $em->updatePassword($user);
+                                (new EntityManager)->update("dentiste", ["password" => password_hash($new_password, 1)], $user["id"]);
                                 
                                 $this->setShowNotification(true);
                                 $this->setNotificationColor('bg-success');

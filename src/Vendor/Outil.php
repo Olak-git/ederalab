@@ -31,8 +31,6 @@ class Outil
 
     public function __construct()
     {
-        // (new GenerateRoutes)->routes();
-        // $this->routes = new Routes;
         self::$show_notification = false;
         self::$notification_color = 'btn-white';
         self::$notifications = [];

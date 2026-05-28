@@ -2,8 +2,6 @@
 // name: dentistes
 // route: dentistes
 
-use src\Repository\DentisteRepository;
-use src\Repository\TransporteurRepository;
 use src\Router\Router;
 
 require '../autoload.php';
@@ -14,8 +12,9 @@ $router->adminIsConnected();
 
 $router->request();
 
-$transporteurs = (new TransporteurRepository)->findBy(['del' => 0]);
-$dentistes = (new DentisteRepository)->findAll();
+$db = $router->getDb();
+
+$dentistes = $db->findAll("dentiste");
 
 $alink = 7;
 
@@ -33,13 +32,12 @@ $alink = 7;
     ob_start();
 
     include 'layouts/_create-dentiste-modal.php';
-    // include 'layouts/_edit-transporteur-modal.php';
     include 'layouts/_profil-dentiste-modal.php';
 ?>
 
     <div class="d-flex justify-content-center my-4">
         <div class="col-12 col-sm-11">
-            <a href="<?= $router->getRoutes()->path('creer_compte_dentiste'); ?>" type="button" class="btn border-ederalab bg-ederalab text-white font-weight-bold shadow-none" style="padding:.6rem 1.25rem;font-size:13px;border-radius: .75rem;">Ajouter un Dentiste</a>
+            <a href="creer-compte-dentiste.php" type="button" class="btn border-ederalab bg-ederalab text-white font-weight-bold shadow-none" style="padding:.6rem 1.25rem;font-size:13px;border-radius: .75rem;">Ajouter un Dentiste</a>
         </div>
     </div>
 
@@ -55,13 +53,13 @@ $alink = 7;
                                     <td>
                                         <span class="d-flex align-items-center">
                                             <span class="d-flex justify-content-center align-items-center p-1 mr-2" style="background-color:#dee2e6;width:40px;min-width:40px;height:40px;border-radius:50%;">
-                                                <img src="<?= $router->getAvatar($dentiste->getImage()); ?>" class="mw-100 mh-100">
+                                                <img src="<?= $router->getAvatar($dentiste["image"]??null); ?>" class="mw-100 mh-100">
                                             </span>
-                                            <?= $dentiste->getUsername(); ?>
+                                            <?= $router->getUsername($dentiste["nom"], $dentiste["prenom"]); ?>
                                         </span>
                                     </td>
-                                    <td><?= 'Phone'//$dentiste->getPhone(); ?></td>
-                                    <td><?= $dentiste->getEmail(); ?></td>
+                                    <td><?= 'Phone'//$dentiste["phone"]; ?></td>
+                                    <td><?= $dentiste["email"]; ?></td>
                                     <td style="width:20px;">
                                         <div class="btn-group dropleft ml-aut">
                                             <a href="" type="button" class="text-dark dropdown-toggl" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style=""><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
@@ -72,15 +70,15 @@ $alink = 7;
                                                 <a href="#" type="button" class="showDentisteProfil btn btn-block text-left text-white" 
                                                     data-toggle="modal" 
                                                     data-target="#profilDentisteModal" 
-                                                    data-id="<?= $dentiste->getSlug(); ?>" 
-                                                    data-username="<?= $dentiste->getUsername(); ?>"
-                                                    data-cabinet="<?= $dentiste->getCabinet(); ?>"
-                                                    data-email="<?= $dentiste->getEmail(); ?>" 
-                                                    data-address="<?= $dentiste->getAdresse(); ?>" 
-                                                    data-phone="<?= ''//$dentiste->getPhone(); ?>"
+                                                    data-id="<?= $dentiste["slug"]; ?>" 
+                                                    data-username="<?= $router->getUsername($dentiste["nom"], $dentiste["prenom"]); ?>"
+                                                    data-cabinet="<?= $dentiste["cabinet"]; ?>"
+                                                    data-email="<?= $dentiste["email"]; ?>" 
+                                                    data-address="<?= $dentiste["adresse"]; ?>" 
+                                                    data-phone="<?= ''//$dentiste["phone"]; ?>"
                                                     style="border-bottom:1px solid #fff;">Voir le profil</a>
-                                                <a href="<?= $router->getRoutes()->path('dentiste', ['s' => $dentiste->getSlug()]); ?>" class="btn btn-block text-left text-white" style="border-bottom:1px solid #fff;">Voir toutes les commandes</a>
-                                                <a href="<?= $router->getRoutes()->path('message', ['user' => 'dentiste', 'dest' => $dentiste->getSlug()]); ?>" class="btn btn-block text-left text-white">Envoyer un message</a>
+                                                <a href="dentiste.php?s=<?= $dentiste["slug"]; ?>" class="btn btn-block text-left text-white" style="border-bottom:1px solid #fff;">Voir toutes les commandes</a>
+                                                <a href="message.php?user=dentiste&dest=<?= $dentiste["slug"]; ?>" class="btn btn-block text-left text-white">Envoyer un message</a>
                                             </div>
                                         </div>
                                     </td>
@@ -103,16 +101,16 @@ $alink = 7;
                             <a href="#" type="button" class="showDentisteProfil btn btn-block text-left text-dark shadow-none" 
                                 data-toggle="modal" 
                                 data-target="#profilDentisteModal" 
-                                data-id="<?= $dentiste->getSlug(); ?>" 
-                                data-username="<?= $dentiste->getUsername(); ?>"
-                                data-cabinet="<?= $dentiste->getCabinet(); ?>"
-                                data-email="<?= $dentiste->getEmail(); ?>" 
-                                data-address="<?= $dentiste->getAdresse(); ?>" 
-                                data-phone="<?= ''//$dentiste->getPhone(); ?>" 
+                                data-id="<?= $dentiste["slug"]; ?>" 
+                                data-username="<?= $router->getUsername($dentiste["nom"], $dentiste["prenom"]); ?>"
+                                data-cabinet="<?= $dentiste["cabinet"]; ?>"
+                                data-email="<?= $dentiste["email"]; ?>" 
+                                data-address="<?= $dentiste["adresse"]; ?>" 
+                                data-phone="<?= ''//$dentiste["phone"]; ?>" 
                                 style="width:calc(100% - 30px);">
                                 <div class="word-break d-flex flex-wrap w-100">
-                                    <div class="col-12 col-sm-6 col-md-8"><?= $dentiste->getUsername(); ?>, <?= $dentiste->getAdresse(); ?></div>
-                                    <div class="col-12 col-sm-6 col-md-4"><?= ''//$dentiste->getPhone(); ?></div>
+                                    <div class="col-12 col-sm-6 col-md-8"><?= $router->getUsername($dentiste["nom"], $dentiste["prenom"]); ?>, <?= $dentiste["adresse"]; ?></div>
+                                    <div class="col-12 col-sm-6 col-md-4"><?= ''//$dentiste["phone"]; ?></div>
                                 </div>
                             </a>
                             <div class="text-right px-0" style="width:30px;">
@@ -125,15 +123,15 @@ $alink = 7;
                                         <a href="#" type="button" class="showDentisteProfil btn btn-block text-left text-white" 
                                             data-toggle="modal" 
                                             data-target="#profilDentisteModal" 
-                                            data-id="<?= $dentiste->getSlug(); ?>" 
-                                            data-username="<?= $dentiste->getUsername(); ?>"
-                                            data-cabinet="<?= $dentiste->getCabinet(); ?>"
-                                            data-email="<?= $dentiste->getEmail(); ?>" 
-                                            data-address="<?= $dentiste->getAdresse(); ?>" 
-                                            data-phone="<?= ''//$dentiste->getPhone(); ?>"
+                                            data-id="<?= $dentiste["slug"]; ?>" 
+                                            data-username="<?= $router->getUsername($dentiste["nom"], $dentiste["prenom"]); ?>"
+                                            data-cabinet="<?= $dentiste["cabinet"]; ?>"
+                                            data-email="<?= $dentiste["email"]; ?>" 
+                                            data-address="<?= $dentiste["adresse"]; ?>" 
+                                            data-phone="<?= ''//$dentiste["phone"]; ?>"
                                             style="border-bottom:1px solid #fff;">Voir le profil</a>
-                                        <a href="<?= $router->getRoutes()->path('dentiste', ['s' => $dentiste->getSlug()]); ?>" class="btn btn-block text-left text-white" style="border-bottom:1px solid #fff;">Voir toutes les commandes</a>
-                                        <a href="<?= $router->getRoutes()->path('message', ['user' => 'dentiste', 'dest' => $dentiste->getSlug()]); ?>" class="btn btn-block text-left text-white">Envoyer un message</a>
+                                        <a href="dentiste.php?s=<?= $dentiste["slug"]; ?>" class="btn btn-block text-left text-white" style="border-bottom:1px solid #fff;">Voir toutes les commandes</a>
+                                        <a href="message.php?user=dentiste&dest=<?= $dentiste["slug"]; ?>" class="btn btn-block text-left text-white">Envoyer un message</a>
                                     </div>
                                 </div>
                             </div>

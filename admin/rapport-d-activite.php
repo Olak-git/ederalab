@@ -2,7 +2,6 @@
 // name: chart
 // route: rapport-d-activite
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -11,12 +10,31 @@ $router = new Router;
 
 $router->adminIsConnected();
 
-$commandeRepository = new CommandeRepository;
+$db = $router->getDb();
 
-$cmd_recue = $router->getDataChart($commandeRepository->chartCommandeRecue());
-$cmd_livree = $router->getDataChart($commandeRepository->chartCommandeLivree());
-$cmd_en_attente = $router->getDataChart($commandeRepository->chartCommandeEnAttente());
-$cmd_non_livree = $router->getDataChart($commandeRepository->chartCommandeNonLivree());
+[$sql, $params] = $router->chartCommandeRecue();
+$request = $db->query($sql, $params);
+$data = $request->fetchAll();
+$request->closeCursor();
+$cmd_recue = $router->getDataChart($data);
+
+[$sql, $params] = $router->chartCommandeLivree();
+$request = $db->query($sql, $params);
+$data = $request->fetchAll();
+$request->closeCursor();
+$cmd_livree = $router->getDataChart($data);
+
+[$sql, $params] = $router->chartCommandeEnAttente();
+$request = $db->query($sql, $params);
+$data = $request->fetchAll();
+$request->closeCursor();
+$cmd_en_attente = $router->getDataChart($data);
+
+[$sql, $params] = $router->chartCommandeNonLivree();
+$request = $db->query($sql, $params);
+$data = $request->fetchAll();
+$request->closeCursor();
+$cmd_non_livree = $router->getDataChart($data);
 
 $_cmds = [$cmd_recue, $cmd_livree];
 $cmds = [$cmd_recue, $cmd_livree, $cmd_en_attente, $cmd_non_livree];

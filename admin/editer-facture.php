@@ -2,7 +2,6 @@
 // name: editer_facture
 // route: editer-facture-([a-z]*)
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -12,9 +11,16 @@ $router = new Router;
 $router->adminIsConnected();
 
 $router->request();
+$db = $router->getDb();
 
 if(isset($_GET['key'])) {
-    $commande = (new CommandeRepository)->findOneBy(['valide' => 1, 'livraison' => 2, 'slug' => $_GET['key']]);
+    $commande = $db->query(
+        "SELECT c.*, d.adresse adresse_dentiste 
+        FROM commande c 
+        INNER JOIN dentiste d 
+        ON c.dentiste = d.id
+        WHERE c.valide=1 AND c.livraison=2 AND c.slug=:slug", ["slug" => $_GET["key"]]
+    )->fetch(); // $db->findOneBy("commande", ['valide' => 1, 'livraison' => 2, 'slug' => $_GET['key']]);
 }
 
 $hlink = 2;
@@ -60,8 +66,8 @@ $hlink = 2;
         
                 <form method="post" class="bg-white border p-4" style="border:1px solid #f4f4f4;border-radius:.5rem;">
                     <div class="badge d-block text-left mb-2">Date : <?= date('d/m/Y'); ?></div>
-                    <div class="badge d-block text-left mb-2">Client : <?= $commande->getUsernamePatient(); ?></div>
-                    <div class="badge d-block text-left mb-4">Ville/Adresse : <?= $commande->getDentiste()->getAdresse(); ?></div>
+                    <div class="badge d-block text-left mb-2">Client : <?= $router->getUsername($commande["nom_patient"], $commande["prenom_patient"]); ?></div>
+                    <div class="badge d-block text-left mb-4">Ville/Adresse : <?= $commande["adresse_dentiste"]; ?></div>
 
                     <h6 class="mb-3">Commande et prix:</h6>
 
@@ -96,7 +102,7 @@ $hlink = 2;
                         <button class="btn p-2 btn-ederalab shadow-none" style="min-width:190px;border-radius:10px;">Créer la facture</button>
                     </div>
 
-                    <input type="hidden" name="new_facture[cmd]" value="<?= $commande->getSlug(); ?>">
+                    <input type="hidden" name="new_facture[cmd]" value="<?= $commande["slug"]; ?>">
                     <input type="hidden" name="csrf" value="<?= password_hash('admin-create-facture', 1); ?>">
                 </form>
 

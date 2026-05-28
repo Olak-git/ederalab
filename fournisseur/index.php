@@ -1,10 +1,11 @@
 <?php
-// name: home
+
 use src\Router\Router;
 
 include '../autoload.php';
 
 $router = new Router;
+$router->transporteurBack();
 ?>
 <!DOCTYPE html>
 <html lang="fr-FR">
@@ -14,7 +15,7 @@ $router = new Router;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="">
     <meta name="description" content="">
-    <title>Amanou-Tech<?= isset($title_child) ? ' - ' . $title_child : ''; ?></title>
+    <title>Ederalab<?= isset($title_child) ? ' - ' . $title_child : ''; ?></title>
     <link rel="shortcut icon" href="<?= $router->getLogo(); ?>">
     <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
     <style>

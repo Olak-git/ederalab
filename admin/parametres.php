@@ -3,7 +3,6 @@
 // route: parametres-([a-z]*)
 // route: parametres-([a-z]*)-([a-z]*)
 
-use src\Repository\ProtheseRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -14,6 +13,8 @@ $router->adminIsConnected();
 
 $router->request();
 
+$db = $router->getDb();
+
 $hlink = 2;
 
 $param_link = 1;
@@ -23,7 +24,7 @@ if(isset($_GET['param'])) {
     if(isset($_GET['add'])) {
 
     }
-    $protheses = (new ProtheseRepository)->findAll();
+    $protheses = $db->findAll("prothese");
 }
 
     ob_start();
@@ -67,8 +68,8 @@ if(isset($_GET['param'])) {
                 <div>
                     <h5 class="mb-4 pl-4">Générale</h5>
                     <div>
-                        <a href="<?= $router->getRoutes()->path('parametres'); ?>" class="params-link <?= isset($param_link) && $param_link == 1 ? 'active' : '' ?> text-decoration-none">Compte</a>
-                        <a href="signout.php" class="params-link text-decoration-none">Déconnexion</a>
+                        <a href="parametres.php" class="params-link <?= isset($param_link) && $param_link == 1 ? 'active' : '' ?> text-decoration-none">Compte</a>
+                        <a href="logout.php" class="params-link text-decoration-none">Déconnexion</a>
                     </div>
                 </div>
 
@@ -76,11 +77,11 @@ if(isset($_GET['param'])) {
                     <h5 class="mb-4 pl-4">Système</h5>
                     <div>
                         <a href="?param" class="params-link <?= isset($param_link) && $param_link == 2 ? 'active' : '' ?> text-decoration-none">Prothèses</a>
-                        <a href="<?= $router->getRoutes()->path('gestion_commandes_recues'); ?>" class="params-link text-decoration-none">Gestion des commandes</a>
-                        <a href="<?= $router->getRoutes()->path('chart'); ?>" class="params-link text-decoration-none">Rapport d'activité</a>
-                        <a href="<?= $router->getRoutes()->path('message', ['user' => 'dentiste']); ?>" class="params-link text-decoration-none">Messagerie</a>
-                        <a href="<?= $router->getRoutes()->path('tracking'); ?>" class="params-link text-decoration-none">Géolocalisation</a>
-                        <a href="<?= $router->getRoutes()->path('factures'); ?>" class="params-link text-decoration-none">Facture</a>
+                        <a href="gestion-suivi-commandes-recues.php" class="params-link text-decoration-none">Gestion des commandes</a>
+                        <a href="rapport-d-activite.php" class="params-link text-decoration-none">Rapport d'activité</a>
+                        <a href="message.php?user=dentiste" class="params-link text-decoration-none">Messagerie</a>
+                        <a href="tracking.php" class="params-link text-decoration-none">Géolocalisation</a>
+                        <a href="factures.php" class="params-link text-decoration-none">Facture</a>
                     </div>
                 </div>
 
@@ -102,7 +103,7 @@ if(isset($_GET['param'])) {
                                 <?= $router->errorHTML2('identifiant'); ?>
                             </div>
                             <div class="form-group mb- px-4">
-                                <input type="email" name="admin_update_id[email]" class="form-control form-control-lg form-style shadow-none" id="inputAddress2" placeholder="email" value="<?= $router->getValPost(['admin_update_id', 'email']) !== '' ? $router->getValPost(['admin_update_id', 'email']) : $router->getAdmin()->getEmail(); ?>" style="font-size:15px;">
+                                <input type="email" name="admin_update_id[email]" class="form-control form-control-lg form-style shadow-none" id="inputAddress2" placeholder="email" value="<?= $router->getValPost(['admin_update_id', 'email']) !== '' ? $router->getValPost(['admin_update_id', 'email']) : $router->getAdmin()["email"]; ?>" style="font-size:15px;">
                                 <small id="" class="form-text text-muted">Est obligatoire pour la réinitialisation de votre identifiant.</small>
                                 <?= $router->errorHTML2('email'); ?>
                             </div>
@@ -157,7 +158,7 @@ if(isset($_GET['param'])) {
                                 <caption style="caption-side:top;">
                                     <span class="d-flex justify-content-between align-items-center">
                                         Prohèses 
-                                        <a href="<?= $router->getRoutes()->path('parametres', ['param' => 's', 'add' => 'pro']); ?>" class="text-ederalab"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
+                                        <a href="parametres.php?param=s&add=pro" class="text-ederalab"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
                                             <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0z"/>
                                             </svg>
                                         </a>
@@ -173,9 +174,9 @@ if(isset($_GET['param'])) {
                                 <tbody>
                                     <?php foreach($protheses as $prothese): ?>
                                         <tr>
-                                            <td><?= $prothese->getNom(); ?></td>
-                                            <td><?= $prothese->getNumero(); ?></td>
-                                            <td><?= $prothese->getDetail(); ?></td>
+                                            <td><?= $prothese["nom"]; ?></td>
+                                            <td><?= $prothese["numero"]; ?></td>
+                                            <td><?= $prothese["detail"]; ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>

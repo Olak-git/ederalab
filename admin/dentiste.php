@@ -2,8 +2,6 @@
 // name: dentiste
 // route: dentiste-([a-z]*)
 
-use src\Repository\CommandeRepository;
-use src\Repository\DentisteRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -11,12 +9,11 @@ include '../autoload.php';
 $router = new Router;
 
 $router->adminIsConnected();
+$db = $router->getDb();
 
 if(isset($_GET['s'])) {
-    $dentiste = (new DentisteRepository)->findOneBy(['slug' => $_GET['s']]);
+    $dentiste = $db->findOneBy("dentiste", ['slug' => $_GET['s']]);
 }
-
-$commandeRepository = new CommandeRepository;
 
 $cmd_recue = [];
 $cmd_livree = [];
@@ -24,10 +21,17 @@ $cmd_en_attente = [];
 $cmd_non_livree = [];
 
 if(!empty($dentiste)) {
-    $cmd_recue = $router->getDataChart($commandeRepository->chartCommandeRecue($dentiste->getId()));
-    $cmd_livree = $router->getDataChart($commandeRepository->chartCommandeLivree($dentiste->getId()));
-    $cmd_en_attente = $router->getDataChart($commandeRepository->chartCommandeEnAttente($dentiste->getId()));
-    $cmd_non_livree = $router->getDataChart($commandeRepository->chartCommandeNonLivree($dentiste->getId()));
+    [$sql, $params] = $router->chartCommandeRecue($dentiste["id"]);
+    $cmd_recue = $router->getDataChart($db->query($sql, $params)->fetchAll());
+
+    [$sql, $params] = $router->chartCommandeLivree($dentiste["id"]);
+    $cmd_livree = $router->getDataChart($db->query($sql, $params)->fetchAll());
+
+    [$sql, $params] = $router->chartCommandeEnAttente($dentiste["id"]);
+    $cmd_en_attente = $router->getDataChart($db->query($sql, $params)->fetchAll());
+
+    [$sql, $params] = $router->chartCommandeNonLivree($dentiste["id"]);
+    $cmd_non_livree = $router->getDataChart($db->query($sql, $params)->fetchAll());
 }
 
 $_cmds = [$cmd_recue, $cmd_livree];
@@ -100,24 +104,24 @@ $alink = 3;
                     events: {
                         animationEnd: function (chartContext, config) {
                             S('.apexcharts-menu-item.exportSVG').forEach(e => {
-                                e.textContent = 'Télécherger en svg'
+                                e.textContent = 'Télécharger en svg'
                             })
                             S('.apexcharts-menu-item.exportPNG').forEach(e => {
-                                e.textContent = 'Télécherger en png'
+                                e.textContent = 'Télécharger en png'
                             })
                             S('.apexcharts-menu-item.exportCSV').forEach(e => {
-                                e.textContent = 'Télécherger en csv'
+                                e.textContent = 'Télécharger en csv'
                             })
                         },
                         updated: function (chartContext, config) {
                             S('.apexcharts-menu-item.exportSVG').forEach(e => {
-                                e.textContent = 'Télécherger en svg'
+                                e.textContent = 'Télécharger en svg'
                             })
                             S('.apexcharts-menu-item.exportPNG').forEach(e => {
-                                e.textContent = 'Télécherger en png'
+                                e.textContent = 'Télécharger en png'
                             })
                             S('.apexcharts-menu-item.exportCSV').forEach(e => {
-                                e.textContent = 'Télécherger en csv'
+                                e.textContent = 'Télécharger en csv'
                             })
                         }
                     },
@@ -188,22 +192,22 @@ $alink = 3;
 
                     <span class="d-flex align-items-start">
                         <span class="d-flex justify-content-center align-items-center p-1 mr-2" style="background-color:#dee2e6;width:40px;min-width:40px;height:40px;border-radius:50%;">
-                            <img src="<?= $router->getAvatar($dentiste->getImage()); ?>" class="mw-100 mh-100">
+                            <img src="<?= $router->getAvatar($dentiste["image"]??null); ?>" class="mw-100 mh-100">
                         </span>
                         <div>
-                            <span class="d-block badge p-0 text-left mb-2"><?= $dentiste->getUsername(); ?></span>
+                            <span class="d-block badge p-0 text-left mb-2"><?= $router->getUsername($dentiste["nom"], $dentiste["prenom"]); ?></span>
                             <span class="d-block mb-1">
                                 <img src="../assets/images/site/icons8-couronne-dentaire-50.png" class="mr-2" width="18" height="18">
-                                <?= $dentiste->getCabinet(); ?></span>
+                                <?= $dentiste["cabinet"]; ?></span>
                             <span class="d-block mb-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-fill mr-3" viewBox="0 0 16 16">
                                     <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm3.436-.586L16 11.801V4.697l-5.803 3.546Z"/>
-                                </svg><?= $dentiste->getEmail(); ?>
+                                </svg><?= $dentiste["email"]; ?>
                             </span>
                             <span class="d-block">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-fill mr-3" viewBox="0 0 16 16">
                                     <path fill-rule="evenodd" d="M4 4a4 4 0 1 1 4.5 3.969V13.5a.5.5 0 0 1-1 0V7.97A4 4 0 0 1 4 3.999zm2.493 8.574a.5.5 0 0 1-.411.575c-.712.118-1.28.295-1.655.493a1.319 1.319 0 0 0-.37.265.301.301 0 0 0-.057.09V14l.002.008a.147.147 0 0 0 .016.033.617.617 0 0 0 .145.15c.165.13.435.27.813.395.751.25 1.82.414 3.024.414s2.273-.163 3.024-.414c.378-.126.648-.265.813-.395a.619.619 0 0 0 .146-.15.148.148 0 0 0 .015-.033L12 14v-.004a.301.301 0 0 0-.057-.09 1.318 1.318 0 0 0-.37-.264c-.376-.198-.943-.375-1.655-.493a.5.5 0 1 1 .164-.986c.77.127 1.452.328 1.957.594C12.5 13 13 13.4 13 14c0 .426-.26.752-.544.977-.29.228-.68.413-1.116.558-.878.293-2.059.465-3.34.465-1.281 0-2.462-.172-3.34-.465-.436-.145-.826-.33-1.116-.558C3.26 14.752 3 14.426 3 14c0-.599.5-1 .961-1.243.505-.266 1.187-.467 1.957-.594a.5.5 0 0 1 .575.411z"/>
-                                </svg><?= $dentiste->getAdresse(); ?>
+                                </svg><?= $dentiste["adresse"]; ?>
                             </span>
                         </div>
                     </span>

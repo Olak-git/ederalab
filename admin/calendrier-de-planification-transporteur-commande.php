@@ -2,7 +2,6 @@
 // name: planification_commande_transporteur
 // route: planification-commande-reception-fournisseur
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 use src\Services\CalendarService;
 
@@ -12,7 +11,7 @@ $router = new Router;
 
 $router->adminIsConnected();
 
-$commandeRepository = new CommandeRepository;
+$db = $router->getDb();
 
 function compare($y, $m, $d, $dt)
 {
@@ -30,8 +29,11 @@ if(isset($_POST['m'])) {
     $month = $_POST['m'];
 }
 
-$commandes_recues = $commandeRepository->totalCommandesRecuesPlanification($year, $month);
-$commandes_livrees = $commandeRepository->totalCommandesLivrees($year, $month);
+[$sql, $param] = $router->totalCommandesRecuesPlanification($year, $month);
+$commandes_recues = $db->query($sql, $param)->fetchColumn();
+
+[$sql, $param] = $router->totalCommandesLivrees($year, $month);
+$commandes_livrees = $db->query($sql, $param)->fetchColumn();
 
 $calendar = new CalendarService($year, $month);
 $weeks = $calendar->getWeeks();

@@ -2,7 +2,6 @@
 // name: gestion_commandes_livrees
 // route: gestion-commandes-livrees
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -13,9 +12,17 @@ $router->adminIsConnected();
 
 $router->request();
 
-$commandeRepository = new CommandeRepository;
+$db = $router->getDb();
 
-$commandes = $commandeRepository->findCommandeLivree();
+$commandes = $db->query(
+    "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste 
+    FROM commande c
+    INNER JOIN dentiste d 
+    ON c.dentiste = d.id
+    WHERE c.archive = 0 
+    AND c.valide = 1
+    AND c.livraison = 2"
+)->fetchAll();
 
 $alink = 2;
 $code = 2;
@@ -43,11 +50,11 @@ $code = 2;
                         data-name="suivi" 
                         data-name-value="cmd_livree" 
                         class="btn-block text-decoration-none text-dark show-modal-commande" style="max-width:80%;">
-                        <?= $commande->getDentiste()->getUsername(); ?>, <?= $commande->getUsernamePatient(); ?>
+                        <?= $router->getUsername($commande["nom_dentiste"], $commande["prenom_dentiste"]); ?>, <?= $router->getUsername($commande["nom_patient"], $commande["prenom_patient"]); ?>
                     </a>
                     <form method="post" class="my-0">
                         <button disable class="btn-link small rounded d-inline-block cursor-pointer text-center py-1 px-2" style="width:70px;">Archiver</button>
-                        <input type="hidden" name="archive[commande]" value="<?= $commande->getId(); ?>" />
+                        <input type="hidden" name="archive[commande]" value="<?= $commande["id"]; ?>" />
                         <input type="hidden" name="csrf" value="<?= password_hash('add-archive', 1); ?>" />
                     </form>
                     <!-- <a href="" class="small rounded btn-link py-1 px-2">Archiver</a> -->

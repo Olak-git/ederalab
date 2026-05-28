@@ -2,7 +2,6 @@
 // name: archives
 // route: archives
 
-use src\Repository\CommandeRepository;
 use src\Router\Router;
 
 include '../autoload.php';
@@ -13,12 +12,41 @@ $router->adminIsConnected();
 
 $router->request();
 
-$commandeRepository = new CommandeRepository;
+$db = $router->getDb();
 
 // commandes
-$archives_today = $commandeRepository->getOrdersArchivedToday();
-$archives_yesterday = $commandeRepository->getOrdersArchivedYesterday();
-$archives_a_long_time = $commandeRepository->getOrdersArchivedLongTime();
+$request = $db->query(
+    "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste
+    FROM commande c 
+    INNER JOIN dentiste d 
+    ON c.dentiste = d.id
+    WHERE c.archive = 1 
+    AND c.date_archive = :dat", ["dat" => date('Y-m-d')]
+);
+$archives_today = $request->fetchAll();
+$request->closeCursor();
+
+$request = $db->query(
+    "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste 
+    FROM commande c 
+    INNER JOIN dentiste d 
+    ON c.dentiste = d.id 
+    WHERE c.archive = 1 
+    AND c.date_archive = :dat", ['dat' => (new \DateTime('now'))->modify('-1days')->format('Y-m-d')]
+);
+$archives_yesterday = $request->fetchAll();
+$request->closeCursor();
+
+$request = $db->query(
+    "SELECT c.*, d.nom nom_dentiste, d.prenom prenom_dentiste 
+    FROM commande c 
+    INNER JOIN dentiste d 
+    ON c.dentiste = d.id 
+    WHERE c.archive = 1 
+    AND c.date_archive < :dat", ['dat' => (new \DateTime('now'))->modify('-1days')->format('Y-m-d')]
+);
+$archives_a_long_time = $request->fetchAll();
+$request->closeCursor();
 
 // var_dump($archives_a_long_time);
 // die;
@@ -133,7 +161,7 @@ $archives_a_long_time = $commandeRepository->getOrdersArchivedLongTime();
                 <?php foreach($archives_today as $cmd): ?>
                     <div class="archive border shadow-s">
                         <div class="title col col-auto my-1">Commande archivée</div>
-                        <div class="col my-1 text-center"><?= $cmd->getDentiste()->getUsername() . ', ' . $cmd->getUsernamePatient(); ?></div>
+                        <div class="col my-1 text-center"><?= $router->getUsername($cmd["nom_dentiste"], $cmd["prenom_dentiste"]) . ', ' . $router->getUsername($cmd["nom_patient"], $cmd["prenom_patient"]); ?></div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -145,7 +173,7 @@ $archives_a_long_time = $commandeRepository->getOrdersArchivedLongTime();
                 <?php foreach($archives_yesterday as $cmd): ?>
                     <div class="archive border shadow-s">
                         <div class="title col col-auto my-1">Commande archivée</div>
-                        <div class="col my-1 text-center"><?= $cmd->getDentiste()->getUsername() . ', ' . $cmd->getUsernamePatient(); ?></div>
+                        <div class="col my-1 text-center"><?= $router->getUsername($cmd["nom_dentiste"], $cmd["prenom_dentiste"]) . ', ' . $router->getUsername($cmd["nom_patient"], $cmd["prenom_patient"]); ?></div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -157,7 +185,7 @@ $archives_a_long_time = $commandeRepository->getOrdersArchivedLongTime();
                 <?php foreach($archives_a_long_time as $cmd): ?>
                     <div class="archive border shadow-s">
                         <div class="title col col-auto my-1">Commande archivée</div>
-                        <div class="col my-1 text-center"><?= $cmd->getDentiste()->getUsername() . ', ' . $cmd->getUsernamePatient(); ?></div>
+                        <div class="col my-1 text-center"><?= $router->getUsername($cmd["nom_dentiste"], $cmd["prenom_dentiste"]) . ', ' . $router->getUsername($cmd["nom_patient"], $cmd["prenom_patient"]); ?></div>
                     </div>
                 <?php endforeach; ?>
             </div>
